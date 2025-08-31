@@ -156,6 +156,23 @@ export const publishToQueue = async (routingKey: string, task: any) => {
   }
 }
 
+const getQueueFromRoutingKey = async (
+  routingKey: string,
+  channel: Channel
+): Promise<number> => {
+  const queues: Record<string, string> = {
+    "generate-pdf": "taskforge:",
+    "resize-image": "",
+    "compress-video": "",
+  }
+
+  const { messageCount, consumerCount } = await channel.checkQueue(
+    queues[routingKey]
+  )
+
+  return 0
+}
+
 // Health check function
 export const isRabbitMQHealthy = (): boolean => {
   return isConnected && !!channel
