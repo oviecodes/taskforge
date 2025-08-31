@@ -1,0 +1,25 @@
+{
+  "name": "taskforge-load-test",
+  "version": "1.0.0",
+  "description": "Load testing suite for TaskForge services",
+  "main": "load-test.js",
+  "scripts": {
+    "test": "node load-test.js",
+    "test:http": "node load-test.js http",
+    "test:ws": "node load-test.js websocket",
+    "test:combined": "node load-test.js combined",
+    "stress": "node stress-test.js",
+    "install-deps": "npm install"
+  },
+  "dependencies": {
+    "autocannon": "^7.12.0",
+    "ws": "^8.14.2",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "clinic": "^13.0.0"
+  },
+  "keywords": ["load-testing", "performance", "websocket", "http"],
+  "author": "TaskForge Team",
+  "license": "MIT"
+}

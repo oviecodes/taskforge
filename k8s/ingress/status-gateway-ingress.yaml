@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: status-gateway
+  namespace: taskforge
+  # annotations:
+    # Optional: gzip, timeouts, rate limits, etc.
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: socket.taskforge.local   # <-- change to your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: status-gateway
+                port:
+                  number: 80
+  # Optional TLS (recommended in real prod)
+  # tls:
+  #   - hosts:
+  #       - api.taskforge.local
+  #     secretName: taskforge-gateway-tls

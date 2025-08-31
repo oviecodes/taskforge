@@ -1,0 +1,298 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: taskforge-postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - taskforge-net
+
+  rabbitmq:
+    image: rabbitmq:3.7-management
+    container_name: taskforge-rabbitmq
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - taskforge-net
+
+  redis:
+    image: redis:latest
+    container_name: taskforge-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - taskforge-net
+    volumes:
+      - redis:/data
+
+  chromium-renderer:
+    build:
+      context: ../chromium-renderer
+    container_name: chromium-renderer
+    env_file:
+      - ../chromium-renderer/.env
+    ports:
+      - "3001:3000"
+    networks:
+      - taskforge-net
+    restart: unless-stopped
+
+  gateway-node:
+    build:
+      context: ../gateway-node
+    container_name: taskforge-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    init: true
+    env_file:
+      - ../gateway-node/.env
+    volumes:
+      - type: bind
+        source: ../gateway-node
+        target: /usr/src/app
+      - type: volume
+        target: /usr/src/app/node_modules
+    networks:
+      - taskforge-net
+    restart: unless-stopped
+
+  status-gateway:
+    build:
+      context: ../status-gateway
+    container_name: taskforge-socket-status
+    ports:
+      - "4000:4000"
+      - "4100:4100"
+    depends_on:
+      - redis
+    init: true
+    env_file:
+      - ../status-gateway/.env
+    volumes:
+      - type: bind
+        source: ../status-gateway
+        target: /usr/src/app
+      - type: volume
+        target: /usr/src/app/node_modules
+    networks:
+      - taskforge-net
+    restart: unless-stopped
+
+  generate-pdf:
+    build:
+      context: ../generate-pdf-worker
+    container_name: taskforge-generate-pdf-worker
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - rabbitmq
+      - chromium-renderer
+    env_file:
+      - ../generate-pdf-worker/.env
+    volumes:
+      - ../generate-pdf-worker:/app
+    working_dir: /app
+    networks:
+      - taskforge-net
+    restart: unless-stopped
+
+  resize-image:
+    build:
+      context: ../resize-image
+    container_name: taskforge-resize-image
+    ports:
+      - "8200:8200"
+    depends_on:
+      - rabbitmq
+      - redis
+    env_file:
+      - ../resize-image/.env
+    # volumes:
+    #   - ../resize-image:/app
+    networks:
+      - taskforge-net
+    restart: unless-stopped
+
+  compress-video:
+    build:
+      context: ../compress-video
+    container_name: taskforge-compress-video
+    ports:
+      - "8100:8100"
+    depends_on:
+      - redis
+      - rabbitmq
+    env_file:
+      - ../compress-video/.env
+    volumes:
+      - ../compress-video:/usr/src/app
+    networks:
+      - taskforge-net
+    restart: unless-stopped
+
+  outbox-publisher:
+    build:
+      context: ../outbox-publisher
+    container_name: taskforge-outbox-publisher
+    ports:
+      - "4300:4300"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    init: true
+    env_file:
+      - ../outbox-publisher/.env
+    volumes:
+      - type: bind
+        source: ../outbox-publisher
+        target: /usr/src/app
+      - type: volume
+        target: /usr/src/app/node_modules
+    networks:
+      - taskforge-net
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/alert-rules:/etc/prometheus/alerts
+    ports:
+      - "9090:9090"
+    networks:
+      - taskforge-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - "3002:3000"
+    networks:
+      - taskforge-net
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  alertmanager:
+    build:
+      context: ./alertmanager
+      dockerfile: Dockerfile
+    container_name: alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    env_file:
+      - .env
+    networks:
+      - taskforge-net
+
+  rabbitmq-exporter:
+    image: kbudde/rabbitmq-exporter
+    container_name: rabbitmq-exporter
+    environment:
+      RABBIT_URL: http://rabbitmq:15672
+      RABBIT_USER: taskforge
+      RABBIT_PASSWORD: secretpassRabbitmq
+      RABBIT_EXPORTER_LOG_LEVEL: info
+    ports:
+      - "9419:9419"
+    depends_on:
+      - rabbitmq
+    networks:
+      - taskforge-net
+
+  redis-exporter:
+    image: oliver006/redis_exporter
+    container_name: redis-exporter
+    command:
+      - "--redis.addr=redis:6379"
+    ports:
+      - "9121:9121"
+    depends_on:
+      - redis
+    networks:
+      - taskforge-net
+
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: loki
+    user: "0:0"
+    command: ["-config.file=/etc/loki/config.yml", "-config.expand-env=true"]
+    environment:
+      # S3 credentials (use an AWS role in prod if running on EC2/EKS)
+      AWS_ACCESS_KEY_ID: ${LOKI_AWS_ACCESS_KEY_ID}
+      
+      AWS_SECRET_ACCESS_KEY: ${LOKI_AWS_SECRET_ACCESS_KEY}
+      LOKI_AWS_REGION: ${LOKI_AWS_REGION}
+      LOKI_S3_BUCKET: ${LOKI_S3_BUCKET}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-true}
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/config.yml
+      - loki-data:/data
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+    networks:
+      - taskforge-net
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    container_name: promtail
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail-positions:/positions
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - taskforge-net
+
+volumes:
+  pgdata:
+  redis:
+  rabbitmq_data:
+  playwright-cache:
+  grafana-data:
+  loki-data:
+  promtail-positions:
+
+networks:
+  taskforge-net:
+    driver: bridge

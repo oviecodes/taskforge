@@ -1,0 +1,107 @@
+# status-gateway-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: status-gateway
+  namespace: taskforge
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: status-gateway
+  template:
+    metadata:
+      labels:
+        app: status-gateway
+    spec:
+      serviceAccountName: taskforge-sa
+      containers:
+        - name: status-gateway
+          image: status-gateway:dev
+          ports:
+            - containerPort: 4000
+            - containerPort: 4100
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: REDIS_PASSWORD } }
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@redis.taskforge.svc.cluster.local:6379"
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: {  name: taskforge-secrets, key: JWT_SECRET } }
+            - name: PORT
+              value: "4000"
+            - name: DEBUG_PORT
+              value: "4100"
+            - name: DEBUG_AUTH_TOKEN
+              valueFrom: { secretKeyRef: {name: taskforge-secrets, key: DEBUG_AUTH_TOKEN }}
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1"
+          readinessProbe:
+            httpGet: { path: /health, port: 4100 }
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          livenessProbe:
+            httpGet: { path: /live, port: 4100 }
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+---
+# Main service
+apiVersion: v1
+kind: Service
+metadata:
+  name: status-gateway
+  namespace: taskforge
+spec:
+  ports:
+    - port: 4000
+      targetPort: 4000
+  selector:
+    app: status-gateway
+  type: NodePort
+
+---
+# Debug service (internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: status-gateway-debug
+  namespace: taskforge
+spec:
+  ports:
+    - port: 4100
+      targetPort: 4100
+  selector:
+    app: status-gateway
+  type: ClusterIP  # Internal only for security
+
+# ---
+# # status-gateway-service.yaml
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: status-gateway
+#   namespace: taskforge
+# spec:
+#   ports:
+#     - name: main-port
+#       port: 4000
+#       targetPort: 4000
+#     - name: health-port
+#       port: 4100
+#       targetPort: 4100
+#   selector:
+#     app: status-gateway
+#   type: NodePort   # or LoadBalancer on production k8s
+
+

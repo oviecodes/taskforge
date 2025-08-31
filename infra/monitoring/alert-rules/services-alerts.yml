@@ -1,0 +1,29 @@
+groups:
+  - name: services.alerts
+    rules:
+      - alert: ServiceDown
+        expr: up{job=~"status-gateway|generate-pdf|resize-image|compress-video"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has not been scraping metrics for over 1 minute."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate in {{ $labels.job }}"
+          description: "Error rate > 10% for the last 5 minutes."
+
+      - alert: TaskProcessingSlow
+        expr: histogram_quantile(0.95, rate(task_duration_seconds_bucket[5m])) > 30
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow task processing in {{ $labels.job }}"
+          description: "95th percentile task processing time > 30 seconds."

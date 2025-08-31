@@ -1,0 +1,47 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+rule_files:
+  - "/etc/prometheus/alerts/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "alertmanager:9093"
+
+scrape_configs:
+  - job_name: 'gateway-node'
+    static_configs:
+      - targets: ['gateway-node:3000']
+
+  - job_name: "outbox-publisher"
+    static_configs:
+      - targets: ["outbox-publisher:4300"]
+
+  - job_name: 'status-gateway'
+    static_configs:
+      - targets: ['status-gateway:4100']
+
+  - job_name: 'generate-pdf'
+    static_configs:
+      - targets: ['generate-pdf:8000']
+
+  - job_name: "compress-video"
+    static_configs:
+      - targets: ["compress-video:8100"]
+
+  - job_name: "resize-image"
+    static_configs:
+      - targets: ["resize-image:8200"]
+      
+  # RabbitMQ Exporter
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq-exporter:9419']
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']

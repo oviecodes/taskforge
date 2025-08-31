@@ -1,0 +1,13 @@
+.DS_Store
+/node_modules
+/dist
+.env
+.git
+.vscode
+docker-compose.dev.yml
+/test_secrets
+/report
+/data_export
+userData.txt
+.npm
+/src/generated/prisma

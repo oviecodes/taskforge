@@ -1,0 +1,29 @@
+groups:
+  - name: rabbitmq.alerts
+    rules:
+      - alert: RabbitMQDown
+        expr: rabbitmq_up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "RabbitMQ is down"
+          description: "RabbitMQ node is not responding to metrics scraping."
+
+      - alert: RabbitMQQueueTooLarge
+        expr: rabbitmq_queue_messages_ready > 1000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ queue backlog is high"
+          description: "Queue has {{ $value }} ready messages."
+
+      - alert: RabbitMQConsumersLow
+        expr: rabbitmq_queue_consumers < 1
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "No consumers for queue"
+          description: "Queue has zero consumers attached."

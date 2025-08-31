@@ -1,0 +1,124 @@
+{
+  "id": null,
+  "title": "Outbox-Publisher service",
+  "tags": ["taskforge", "service", "status-gateway"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "title": "Task Status Update Throughput (Tasks/sec)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(task_status_updated_total{job=\"status-gateway\"}[5m]))",
+          "legendFormat": "Tasks/sec",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Total Client Connections",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(client_connections_total{job=\"status-gateway\"}[5m]))",
+          "legendFormat": "Tasks/sec",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Active Clients Gauge",
+      "type": "piechart",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(connected_clients_gauge{job=\"status-gateway\"}[5m])",
+          "legendFormat": "{{status}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Task Success vs Failure",
+      "type": "piechart",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(task_processed_total{job=\"status-gateway\"}[5m]))",
+          "legendFormat": "{{status}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Task Latency (p95 & p99)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(task_dispatch_duration_seconds_bucket{job=\"status-gateway\"}[5m])))",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(task_dispatch_duration_seconds_bucket{job=\"status-gateway\"}[5m])))",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ]
+    },
+    {
+      "title": "Task Retries/sec",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(rate(task_retry_attempts_total{job=\"status-gateway\"}[5m]))",
+          "legendFormat": "Retries/sec",
+          "refId": "E"
+        }
+      ]
+    },
+    {
+      "title": "DLQ Messages",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "rabbitmq_queue_messages_get_total{queue=\"status-gateway.dead\"}",
+          "legendFormat": "DLQ Messages",
+          "refId": "F"
+        }
+      ]
+    },
+    {
+      "title": "CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "rate(container_cpu_usage_seconds_total{container=\"generate-pdf\"}[5m])",
+          "legendFormat": "CPU",
+          "refId": "G"
+        }
+      ]
+    },
+    {
+      "title": "Memory Usage",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "container_memory_usage_bytes{container=\"generate-pdf\"}",
+          "legendFormat": "Memory",
+          "refId": "H"
+        }
+      ]
+    }
+  ]
+}

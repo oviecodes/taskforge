@@ -1,0 +1,6 @@
+{
+  "python.defaultInterpreterPath": "/Users/a/Documents/taskforge/compress-video/venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "python.analysis.extraPaths": ["/Users/a/Documents/taskforge/compress-video"]
+}

@@ -1,0 +1,89 @@
+task_processed_total = Counter("task_processed_total", "Total number of task processed", ["type", "status"], registry=registry)
+task_retry_attempts_total = Counter("task_retry_attempts_total", "Total number of retry attempts", ["type"], registry=registry)
+task_dropped_total = Counter('task_dropped_total', "Tasks dropped to DLQ", ["type"], registry=registry)
+task_processing_duration_seconds = Histogram("task_processing_duration_seconds", "Time spent on task", ["type"], registry=registry)
+ffmpeg_failures_total = Counter("ffmpeg_failures_total", "FFmpeg-specific failures", ["codec", "format"], registry=registry)
+s3_upload_failures_total = Counter("s3_upload_failures_total", "Failures while pushing output to S3", ["type"], registry=registry)
+
+export const taskCounter = new client.Counter({
+  name: "tasks_created_total",
+  help: "Total number of tasks created",
+  labelNames: ["type"],
+})
+
+export const taskErrorCounter = new client.Counter({
+  name: "task_errors_total",
+  help: "Number of failed task creations",
+})
+
+export const taskDuration = new client.Histogram({
+  name: "task_creation_duration_seconds",
+  help: "Duration of task creation logic",
+  buckets: [0.1, 0.5, 1, 2, 5],
+})
+
+task_processed_total = Counter("task_processed_total", "Total number of task processed", ["type", "status"], registry=registry)
+task_retry_attempts_total = Counter("task_retry_attempts_total", "Total number of retry attempts", ["type"], registry=registry)
+task_dropped_total = Counter('task_dropped_total', "Tasks dropped to DLQ", ["type"], registry=registry)
+task_processing_duration_seconds = Histogram("task_processing_duration_seconds", "Time spent on task", ["type"], registry=registry)
+
+export const taskCounter = new client.Counter({
+  name: "tasks_dispatched_total",
+  help: "Total number of tasks dispatched",
+  labelNames: ["type"],
+})
+
+export const taskErrorCounter = new client.Counter({
+  name: "task_dispatch_errors_total",
+  help: "Number of failed task dispatch",
+})
+
+export const taskDuration = new client.Histogram({
+  name: "task_dipatch_duration_seconds",
+  help: "Duration of task creation logic",
+  buckets: [0.1, 0.5, 1, 2, 5],
+})
+
+var TaskProcessedTotal = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "task_processed_total",
+		Help: "Success/failure per task",
+	},
+	[]string{"type", "status"},
+)
+
+var TaskProcessedDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	Name:    "task_processing_duration_seconds",
+	Help:    "A histogram of the Time spent on tasks in seconds.",
+	Buckets: prometheus.ExponentialBuckets(0.1, 1.5, 5),
+}, []string{"type"})
+
+var TaskRetryAttempts = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "task_retry_attempts_total",
+	Help: "The number of retry attempts",
+}, []string{"type"})
+
+var TaskDroppedTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "task_dropped_total",
+	Help: "Tasks dropped to DLQ",
+}, []string{"type"})
+
+var S3UploadFailures = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "s3_upload_failures_total",
+	Help: "Tasks dropped to DLQ",
+}, []string{"type"})
+
+export const statusUpdateCounter = new client.Counter({
+  name: "task_status_updates_total",
+  help: "Total number of task status updates received via Redis",
+})
+
+export const clientConnectionsCounter = new client.Counter({
+  name: "client_connections_total",
+  help: "Total number of clients connected since start",
+})
+
+export const activeClientsGauge = new client.Gauge({
+  name: "connected_clients_gauge",
+  help: "Current number of active websocket connections",
+})

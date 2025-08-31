@@ -1,0 +1,186 @@
+{
+  "id": null,
+  "title": "Taskforge System Overview",
+  "tags": ["taskforge", "overview"],
+  "timezone": "browser",
+  "schemaVersion": 30,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "row",
+      "title": "Global Task Flow",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Tasks Created/sec",
+      "targets": [
+        {
+          "expr": "sum(rate(tasks_created_total[1m]))",
+          "legendFormat": "Created"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 1 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Tasks Dispatched/sec",
+      "targets": [
+        {
+          "expr": "sum(rate(tasks_dispatched_total[1m]))",
+          "legendFormat": "Dispatched"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Tasks Processed/sec",
+      "targets": [
+        {
+          "expr": "sum(rate(task_processed_total[1m]))",
+          "legendFormat": "Processed"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 }
+    },
+
+    {
+      "type": "row",
+      "title": "Success vs Failure",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 }
+    },
+    {
+      "type": "bargauge",
+      "title": "Task Success vs Failure",
+      "targets": [
+        {
+          "expr": "sum by (status)(rate(task_processed_total[1m]))",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 }
+    },
+    {
+      "type": "stat",
+      "title": "Failure Rate %",
+      "targets": [
+        {
+          "expr": "sum(rate(task_processed_total{status=\"failure\"}[1m])) / sum(rate(task_processed_total[1m])) * 100"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 }
+    },
+
+    {
+      "type": "row",
+      "title": "Retries & DLQ",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Retries/sec (by type)",
+      "targets": [
+        {
+          "expr": "sum by (type)(rate(task_retry_attempts_total[1m]))",
+          "legendFormat": "{{type}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 }
+    },
+    {
+      "type": "table",
+      "title": "Dropped Tasks (DLQ)",
+      "targets": [
+        {
+          "expr": "sum by (type)(task_dropped_total)",
+          "legendFormat": "{{type}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 }
+    },
+
+    {
+      "type": "row",
+      "title": "Latency",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Task Latency (p95 by type)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(task_processing_duration_seconds_bucket[5m])) by (le,type))",
+          "legendFormat": "{{type}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 }
+    },
+
+    {
+      "type": "row",
+      "title": "Worker Errors",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 }
+    },
+    {
+      "type": "table",
+      "title": "FFmpeg Failures",
+      "targets": [
+        {
+          "expr": "sum by (codec,format)(ffmpeg_failures_total)",
+          "legendFormat": "{{codec}} / {{format}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 37 }
+    },
+    {
+      "type": "table",
+      "title": "S3 Upload Failures",
+      "targets": [
+        {
+          "expr": "sum by (type)(s3_upload_failures_total)",
+          "legendFormat": "{{type}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 37 }
+    },
+
+    {
+      "type": "row",
+      "title": "Status Gateway",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Redis Status Updates/sec",
+      "targets": [
+        {
+          "expr": "rate(task_status_updates_total[1m])",
+          "legendFormat": "Updates"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 46 }
+    },
+    {
+      "type": "gauge",
+      "title": "Active Clients (WS)",
+      "targets": [{ "expr": "connected_clients_gauge" }],
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 46 }
+    },
+    {
+      "type": "stat",
+      "title": "Total Client Connections",
+      "targets": [{ "expr": "client_connections_total" }],
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 46 }
+    }
+  ],
+  "templating": { "list": [] },
+  "annotations": { "list": [] }
+}

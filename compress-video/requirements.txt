@@ -1,0 +1,9 @@
+pika
+boto3
+ffmpeg-python
+redis
+python-dotenv
+requests
+loguru
+prometheus_client
+Flask

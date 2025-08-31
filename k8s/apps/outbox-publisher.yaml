@@ -1,0 +1,70 @@
+# outbox-publisher-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: outbox-publisher
+  namespace: taskforge
+spec:
+  replicas: 1   # usually runs single instance to avoid double-publishing
+  selector:
+    matchLabels:
+      app: outbox-publisher
+  template:
+    metadata:
+      labels:
+        app: outbox-publisher
+    spec:
+      serviceAccountName: taskforge-sa
+      containers:
+        - name: outbox-publisher
+          image: your-dockerhub-username/outbox-publisher:latest
+          ports:
+            - containerPort: 8200
+          env:
+            - name: POSTGRES_URI
+              valueFrom:
+                secretKeyRef:
+                  name: taskforge-secrets
+                  key: postgres_uri
+            - name: RABBITMQ_URL
+              value: amqp://taskforge:secretpassRabbitmq@rabbitmq.taskforge.svc.cluster.local:5672
+            - name: EXCHANGE_NAME
+              value: "task.exchange"
+            - name: OUTBOX_POLL_INTERVAL
+              value: "5000"
+            - name: HEALTH_PORT
+              value: "8200"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1"
+          readinessProbe:
+            httpGet: { path: /health, port: 8200 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /live, port: 8200 }
+            initialDelaySeconds: 30
+            periodSeconds: 30
+
+
+---
+
+# outbox-publisher-service.yaml (Health service for monitoring)
+apiVersion: v1
+kind: Service
+metadata:
+  name: outbox-publisher-health
+  namespace: taskforge
+spec:
+  ports:
+    - port: 8200
+      targetPort: 8200
+  selector:
+    app: outbox-publisher
+  type: ClusterIP
+
+              

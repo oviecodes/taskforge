@@ -1,0 +1,47 @@
+groups:
+  - name: taskforge-alerts
+    rules:
+      - alert: HighDLQSize
+        expr: sum(queue_messages_ready{queue=~".*\\.dead"}) > 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High DLQ size"
+          description: "Dead-letter queue has more than 10 messages for over 5 minutes"
+
+      - alert: HighRetryRate
+        expr: rate(task_retry_attempts_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High task retry rate"
+          description: "More than 5 retries/min in the last 5 minutes"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service down"
+          description: "No scrape data from {{ $labels.instance }} for 2 minutes"
+
+      - alert: SlowTaskProcessing
+        expr: histogram_quantile(0.95, rate(task_processing_duration_seconds_bucket[5m])) > 30
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow task processing"
+          description: "p95 task processing time > 30s"
+
+      - alert: S3UploadFailures
+        expr: increase(s3_upload_failures_total[10m]) > 3
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "S3 Upload Failures"
+          description: "More than 3 S3 upload failures in last 10 minutes"

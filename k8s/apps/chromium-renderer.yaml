@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chromium-renderer
+  namespace: taskforge
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chromium-renderer
+  template:
+    metadata:
+      labels:
+        app: chromium-renderer
+    spec:
+      serviceAccountName: taskforge-sa
+      containers:
+        - name: chromium-renderer
+          image: chromium-renderer:dev
+          ports:
+            - containerPort: 3000
+          env:
+            # Service discovery for Redis/RabbitMQ if your renderer emits events/metrics there.
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: AWS_ACCESS_KEY_ID
+                  name: taskforge-secrets
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: AWS_SECRET_ACCESS_KEY
+                  name: taskforge-secrets
+            - name: S3_BUCKET_NAME
+              valueFrom: 
+                secretKeyRef:
+                  key: S3_BUCKET_NAME
+                  name: taskforge-secrets
+            - name: AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  key: AWS_REGION
+                  name: taskforge-secrets
+            - name: RENDER_TOKEN
+              valueFrom: 
+                secretKeyRef:
+                  key: RENDER_TOKEN
+                  name: taskforge-secrets
+            - name: PORT
+              value: "3000"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1500m"
+              memory: "2Gi"
+          # securityContext:
+          #   allowPrivilegeEscalation: false
+          #   runAsNonRoot: true
+          #   runAsUser: 1000
+          #   seccompProfile:
+          #     type: RuntimeDefault
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chromium-renderer
+  namespace: taskforge
+spec:
+  selector:
+    app: chromium-renderer
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+  type: ClusterIP
+
