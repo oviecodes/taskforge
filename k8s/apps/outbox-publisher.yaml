@@ -17,23 +17,30 @@ spec:
       serviceAccountName: taskforge-sa
       containers:
         - name: outbox-publisher
-          image: your-dockerhub-username/outbox-publisher:latest
+          image: outbox-publisher:dev
           ports:
             - containerPort: 8200
           env:
-            - name: POSTGRES_URI
-              valueFrom:
-                secretKeyRef:
-                  name: taskforge-secrets
-                  key: postgres_uri
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_USER }}
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_PASSWORD } }
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres.taskforge.svc.cluster.local:5432"
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: RABBITMQ_PASSWORD } }
             - name: RABBITMQ_URL
-              value: amqp://taskforge:secretpassRabbitmq@rabbitmq.taskforge.svc.cluster.local:5672
+              value: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASSWORD)@rabbitmq.taskforge.svc.cluster.local:5672
             - name: EXCHANGE_NAME
               value: "task.exchange"
             - name: OUTBOX_POLL_INTERVAL
               value: "5000"
             - name: HEALTH_PORT
               value: "8200"
+            - name: NODE_ENV
+              value: "development"
           resources:
             requests:
               memory: "256Mi"

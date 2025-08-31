@@ -15,4 +15,4 @@ COPY . .
 RUN npm run build
 # RUN npm run db-push
 
-CMD ["sh", "-c", "export NODE_ENV=development && npm run dev"]
+CMD ["sh", "-c", "export NODE_ENV=development && npm start"]
