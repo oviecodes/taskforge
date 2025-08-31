@@ -156,24 +156,99 @@ export const publishToQueue = async (routingKey: string, task: any) => {
   }
 }
 
-const getQueueFromRoutingKey = async (
-  routingKey: string,
-  channel: Channel
-): Promise<number> => {
-  const queues: Record<string, string> = {
-    "generate-pdf": "taskforge:",
-    "resize-image": "",
-    "compress-video": "",
-  }
-
-  const { messageCount, consumerCount } = await channel.checkQueue(
-    queues[routingKey]
-  )
-
-  return 0
-}
-
 // Health check function
 export const isRabbitMQHealthy = (): boolean => {
   return isConnected && !!channel
 }
+
+class SmartOutboxPublisher {
+  publishInterval: number
+  channel: Channel
+  intervalNumber: any
+  type: string
+
+  constructor(type: string) {
+    this.type = type
+    this.publishInterval = 0
+    this.channel = channel
+  }
+
+  // public set setPublishInterval(interval: number) {
+  //   this.publishInterval = interval
+  // }
+
+  async computeDynamicPublishingFrequency(routingKey: string) {
+    const queues: Record<string, string> = {
+      "generate-pdf": "task.generate-pdf",
+      "resize-image": "task.resize-image",
+      "compress-video": "task.compress-video",
+    }
+
+    try {
+      const { messageCount, consumerCount } = await this.channel.checkQueue(
+        queues[routingKey]
+      )
+
+      const backlogPerConsumer =
+        consumerCount > 0 ? messageCount / consumerCount : messageCount
+
+      let publishInterval = 5000
+
+      if (backlogPerConsumer > 100) {
+        publishInterval = 15000
+      } else if (backlogPerConsumer > 50) {
+        publishInterval = 10000
+      } else {
+        publishInterval = 5000
+      }
+
+      return publishInterval
+    } catch (error) {
+      log.error(
+        {
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+        "❌ Invalid Queue - Queue doesn't exist"
+      )
+      return -1
+    }
+  }
+
+  async setUpInterval(
+    routingKey: string,
+    publishCallback: () => Promise<void>
+  ) {
+    const publishInterval = await this.computeDynamicPublishingFrequency(
+      routingKey
+    )
+
+    if (this.publishInterval === publishInterval || publishInterval === -1) {
+      return
+    }
+
+    this.cancelInterval()
+
+    this.intervalNumber = setInterval(async () => {
+      try {
+        await publishCallback()
+      } catch (error) {
+        log.error(
+          {
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+          `❌ Error in ${this.type} publish loop`
+        )
+      }
+    }, this.publishInterval)
+
+    this.publishInterval = publishInterval
+  }
+
+  cancelInterval() {
+    clearInterval(this.intervalNumber)
+  }
+}
+
+export const resizeImagePublisher = new SmartOutboxPublisher("resize-image")
+export const compressVideoPublisher = new SmartOutboxPublisher("compress-video")
+export const generatePdfPublisher = new SmartOutboxPublisher("generate-pdf")

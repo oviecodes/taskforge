@@ -39,7 +39,7 @@ spec:
             - name: EXCHANGE_NAME
               value: "task.exchange"
             - name: QUEUE_NAME
-              value: "resize-image.queue"
+              value: "task.resize-image"
             - name: ROUTING_KEY
               value: "resize-image"
             - name: RETRY_DELAY_MS

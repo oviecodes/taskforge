@@ -7,11 +7,12 @@ import { taskDuration, taskCounter, taskErrorCounter } from "./lib/metrics"
 
 const log = withLogContext({ service: "outbox-publisher" })
 
-export async function publishOutbox() {
+export async function publishOutbox(type: string) {
   const end = taskDuration.startTimer()
   const pending = await db
     .table("Outbox")
     .where("status", "pending")
+    .where({ type })
     .limit(20)
     .orderBy("createdAt", "asc")
 

@@ -1,4 +1,9 @@
-import { connectToRabbitMQ } from "./rabbitmq.service"
+import {
+  connectToRabbitMQ,
+  resizeImagePublisher,
+  compressVideoPublisher,
+  generatePdfPublisher,
+} from "./rabbitmq.service"
 import { publishOutbox } from "./publisher"
 import { startHealthServer } from "./health.server"
 import { isDatabaseHealthy } from "./connectors/db"
@@ -16,24 +21,46 @@ const initializeServices = async () => {
     // Connect to RabbitMQ (has built-in retry logic)
     await connectToRabbitMQ()
 
+    await runServicePublishers()
+
     // Start the publishing loop
     setInterval(async () => {
       try {
-        await publishOutbox()
+        await runServicePublishers()
       } catch (error) {
-        log.error({ 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        }, '❌ Error in publish loop')
+        log.error(
+          {
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+          "❌ Error in publish loop"
+        )
       }
-    }, 5000)
+    }, 60 * 1000)
 
     log.info("✅ All services initialized successfully")
   } catch (error) {
-    log.error({ 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    }, '❌ Failed to initialize services')
+    log.error(
+      {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      "❌ Failed to initialize services"
+    )
     process.exit(1)
   }
+}
+
+const runServicePublishers = async () => {
+  await Promise.all([
+    resizeImagePublisher.setUpInterval("resize-image", () =>
+      publishOutbox("resize-image")
+    ),
+    compressVideoPublisher.setUpInterval("compress-video", () =>
+      publishOutbox("compress-video")
+    ),
+    generatePdfPublisher.setUpInterval("generate-pdf", () =>
+      publishOutbox("generate-pdf")
+    ),
+  ])
 }
 
 // Start services
