@@ -1,5 +1,14 @@
 import express, { NextFunction, Request, Response } from "express"
 const router = express.Router()
+import { register } from "../utils/metrics"
+
+router.get(
+  "/metrics",
+  async (req: Request, res: Response, next: NextFunction) => {
+    res.set("Content-Type", register.contentType)
+    res.send(await register.metrics())
+  }
+)
 
 router.get("/health", (req: Request, res: Response, next: NextFunction) => {
   const healthStatus = {
@@ -26,3 +35,5 @@ router.get("/live", (req: Request, res: Response, next: NextFunction) => {
     memory: process.memoryUsage(),
   })
 })
+
+export default router
