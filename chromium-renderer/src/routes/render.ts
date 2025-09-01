@@ -2,6 +2,9 @@ import express from "express"
 import { launchBrowser } from "../utils/browser"
 import { Request, Response } from "express"
 import { uploadBufferToS3 } from "../utils/s3"
+import { withLogContext } from "../utils/log-context"
+
+const log = withLogContext({ service: "chromium-renderer" })
 
 import {
   pdfErrorCounter,
@@ -39,12 +42,21 @@ router.post("/pdf", async (req: Request, res: Response) => {
 
     pdfProcessedCounter.labels("success").inc()
 
+    log.info({
+      message: "PDF processed and uploaded successfully",
+    })
+
     return res.status(200).json({
       success: true,
       url: s3Url,
     })
   } catch (err: any) {
-    console.error("[PDF ERROR]", err)
+    log.error(
+      {
+        err,
+      },
+      "An error occured, failed to render and upload PDF"
+    )
     pdfErrorCounter.inc()
     return res.status(500).json({ error: "Failed to render and upload PDF" })
   } finally {

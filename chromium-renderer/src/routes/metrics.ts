@@ -14,10 +14,7 @@ router.get("/health", (req: Request, res: Response, next: NextFunction) => {
   const healthStatus = {
     status: "healthy",
     timestamp: new Date().toISOString(),
-    services: {
-      database: { status: "up" },
-      redis: { status: "up" },
-    },
+    services: {},
     uptime: process.uptime(),
   }
 

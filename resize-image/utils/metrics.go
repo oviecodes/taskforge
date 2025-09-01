@@ -33,7 +33,7 @@ var TaskDroppedTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 
 var S3UploadFailures = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name: "s3_upload_failures_total",
-	Help: "Tasks dropped to DLQ",
+	Help: "Total amount of s3 upload failures",
 }, []string{"type"})
 
 func Start_metrics_server() error {

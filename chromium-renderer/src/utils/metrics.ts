@@ -34,7 +34,14 @@ export const pdfProcessingDuration = new client.Histogram({
   buckets: [0.1, 0.5, 1, 2, 5],
 })
 
+export const s3UploadFailures = new client.Counter({
+  name: "s3_upload_failures_total",
+  help: "Total number of s3 upload failures",
+  labelNames: ["type"],
+})
+
 register.registerMetric(pdfProcessedCounter)
 register.registerMetric(pdfErrorCounter)
 register.registerMetric(pdfProcessingDuration)
 register.registerMetric(pdfTasksCounter)
+register.registerMetric(s3UploadFailures)
