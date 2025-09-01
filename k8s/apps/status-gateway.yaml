@@ -36,24 +36,28 @@ spec:
               valueFrom: { secretKeyRef: {name: taskforge-secrets, key: DEBUG_AUTH_TOKEN }}
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "256Mi"  # Increased for WebSocket + Redis + TypeScript
+              cpu: "100m"  # Reduced for Minikube
             limits:
-              memory: "512Mi"
-              cpu: "1"
+              memory: "512Mi"    # Increased due to dev mode + multiple connections
+              cpu: "500m"  # Reduced for Minikube
+          startupProbe:
+            httpGet: { path: /health, port: 4100 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 18  # 3 minutes total
           readinessProbe:
             httpGet: { path: /health, port: 4100 }
-            initialDelaySeconds: 120
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
+            initialDelaySeconds: 5   # After startup probe succeeds
+            periodSeconds: 30        # Check every 30s (gentle)
+            timeoutSeconds: 10       # Allow slow responses
+            failureThreshold: 3      # 90s to mark unready
           livenessProbe:
             httpGet: { path: /live, port: 4100 }
-            initialDelaySeconds: 120
-            periodSeconds: 30
-            timeoutSeconds: 3
-            failureThreshold: 3
+            initialDelaySeconds: 60  # Wait 1min after startup
+            periodSeconds: 60        # Check every minute (very gentle)
+            timeoutSeconds: 15       # Allow slow responses  
+            failureThreshold: 5      # 5min before restart
 
 ---
 # Main service

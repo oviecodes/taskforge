@@ -20,7 +20,6 @@ spec:
           ports:
             - containerPort: 3000
           env:
-            # Service discovery for Redis/RabbitMQ if your renderer emits events/metrics there.
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -44,33 +43,40 @@ spec:
             - name: RENDER_TOKEN
               valueFrom: 
                 secretKeyRef:
-                  key: RENDER_TOKEN
+                  key: CHROMIUM_RENDERER_TOKEN
                   name: taskforge-secrets
             - name: PORT
               value: "3000"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 18  # 3 minutes total
           readinessProbe:
             httpGet:
               path: /health
               port: 3000
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 6
+            initialDelaySeconds: 5   # After startup probe succeeds
+            periodSeconds: 30        # Check every 30s (gentle)
+            timeoutSeconds: 10       # Allow slow responses
+            failureThreshold: 3      # 90s to mark unready
           livenessProbe:
             httpGet:
               path: /health
               port: 3000
-            initialDelaySeconds: 30
-            periodSeconds: 15
-            timeoutSeconds: 2
-            failureThreshold: 3
+            initialDelaySeconds: 60  # Wait 1min after startup
+            periodSeconds: 60        # Check every minute (very gentle)
+            timeoutSeconds: 15       # Allow slow responses  
+            failureThreshold: 5      # 5min before restart
           resources:
             requests:
-              cpu: "250m"
-              memory: "512Mi"
+              cpu: "100m"  # Reduced for Minikube
+              memory: "256Mi"  # Reduced for Minikube
             limits:
-              cpu: "1500m"
-              memory: "2Gi"
+              cpu: "500m"  # Reduced for Minikube
+              memory: "1Gi"  # Reduced for Minikube
           # securityContext:
           #   allowPrivilegeEscalation: false
           #   runAsNonRoot: true

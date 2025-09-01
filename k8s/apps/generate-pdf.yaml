@@ -22,19 +22,28 @@ spec:
             - containerPort: 8000
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "256Mi"  # Already good for Minikube
+              cpu: "100m"  # Reduced for Minikube
             limits:
-              memory: "512Mi"
-              cpu: "1"
+              memory: "512Mi"  # Already good for Minikube
+              cpu: "500m"  # Reduced for Minikube
+          startupProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 18  # 3 minutes total
           readinessProbe:
             httpGet: { path: /health, port: 8000 }
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            initialDelaySeconds: 5   # After startup probe succeeds
+            periodSeconds: 30        # Check every 30s (gentle)
+            timeoutSeconds: 10       # Allow slow responses
+            failureThreshold: 3      # 90s to mark unready
           livenessProbe:
             httpGet: { path: /live, port: 8000 }
-            initialDelaySeconds: 15
-            periodSeconds: 30
+            initialDelaySeconds: 60  # Wait 1min after startup
+            periodSeconds: 60        # Check every minute (very gentle)
+            timeoutSeconds: 15       # Allow slow responses  
+            failureThreshold: 5      # 5min before restart
           env:
             - name: RABBITMQ_USER
               valueFrom: { secretKeyRef: { name: taskforge-secrets, key: RABBITMQ_USER } }
@@ -72,7 +81,12 @@ spec:
               valueFrom: { configMapKeyRef: { name: taskforge-config, key: S3_SIGNED_URL_EXP } }
             - name: PDF_OUTPUT_DIR
               valueFrom: { configMapKeyRef: { name: taskforge-config, key: PDF_OUTPUT_DIR } }
-
+            - name: CHROMIUM_RENDERER_URL
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: CHROMIUM_RENDERER_URL } }
+            - name: CHROMIUM_RENDERER_TOKEN
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: CHROMIUM_RENDERER_TOKEN } }
+            - name: PORT
+              value: "8000"
 ---
 # generate-pdf-service.yaml
 apiVersion: v1

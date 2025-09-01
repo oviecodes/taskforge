@@ -40,13 +40,13 @@ export const connectToRabbitMQ = async () => {
         log.warn("RabbitMQ connection closed")
         isConnected = false
         // Attempt to reconnect
-        if (!isReconnecting) {
-          setTimeout(() => reconnectToRabbitMQ(), 5000)
-        }
+        // if (!isReconnecting) {
+        //   setTimeout(() => reconnectToRabbitMQ(), 5000)
+        // }
       })
 
       log.info("✅ Connected to RabbitMQ. Exchanges ready.")
-      return
+      return channel
     } catch (err: any) {
       attempts++
       log.error({ error: err.message }, `❌ RabbitMQ connection failed`)
@@ -91,9 +91,9 @@ const reconnectToRabbitMQ = async (maxRetries = 5): Promise<void> => {
       connection.on("close", () => {
         log.warn("RabbitMQ connection closed")
         isConnected = false
-        if (!isReconnecting) {
-          setTimeout(() => reconnectToRabbitMQ(), 5000)
-        }
+        // if (!isReconnecting) {
+        //   setTimeout(() => reconnectToRabbitMQ(), 5000)
+        // }
       })
 
       log.info("RabbitMQ reconnection successful")
@@ -177,6 +177,11 @@ class SmartOutboxPublisher {
   //   this.publishInterval = interval
   // }
 
+  public setChannel(channel: Channel) {
+    this.channel = channel
+    return this
+  }
+
   async computeDynamicPublishingFrequency(routingKey: string) {
     const queues: Record<string, string> = {
       "generate-pdf": "task.generate-pdf",
@@ -239,7 +244,7 @@ class SmartOutboxPublisher {
           `❌ Error in ${this.type} publish loop`
         )
       }
-    }, this.publishInterval)
+    }, publishInterval)
 
     this.publishInterval = publishInterval
     log.info({
@@ -254,6 +259,6 @@ class SmartOutboxPublisher {
   }
 }
 
-export const resizeImagePublisher = new SmartOutboxPublisher("resize-image")
-export const compressVideoPublisher = new SmartOutboxPublisher("compress-video")
+// export const resizeImagePublisher = new SmartOutboxPublisher("resize-image")
+// export const compressVideoPublisher = new SmartOutboxPublisher("compress-video")
 export const generatePdfPublisher = new SmartOutboxPublisher("generate-pdf")

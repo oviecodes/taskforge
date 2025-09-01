@@ -1,7 +1,7 @@
 import {
   connectToRabbitMQ,
-  resizeImagePublisher,
-  compressVideoPublisher,
+  // resizeImagePublisher,
+  // compressVideoPublisher,
   generatePdfPublisher,
 } from "./rabbitmq.service"
 import { publishOutbox } from "./publisher"
@@ -19,14 +19,14 @@ const HEALTH_PORT = Number(process.env.HEALTH_PORT || 8200)
 const initializeServices = async () => {
   try {
     // Connect to RabbitMQ (has built-in retry logic)
-    await connectToRabbitMQ()
+    const channel = await connectToRabbitMQ()
 
-    await runServicePublishers()
+    // await runServicePublishers(channel)
 
     // Start the publishing loop
     setInterval(async () => {
       try {
-        await runServicePublishers()
+        await runServicePublishers(channel)
       } catch (error) {
         log.error(
           {
@@ -49,17 +49,17 @@ const initializeServices = async () => {
   }
 }
 
-const runServicePublishers = async () => {
+const runServicePublishers = async (channel: any) => {
   await Promise.all([
-    resizeImagePublisher.setUpInterval("resize-image", () =>
-      publishOutbox("resize-image")
-    ),
-    compressVideoPublisher.setUpInterval("compress-video", () =>
-      publishOutbox("compress-video")
-    ),
-    generatePdfPublisher.setUpInterval("generate-pdf", () =>
-      publishOutbox("generate-pdf")
-    ),
+    // resizeImagePublisher
+    //   .setChannel(channel)
+    //   .setUpInterval("resize-image", () => publishOutbox("resize-image")),
+    // compressVideoPublisher
+    //   .setChannel(channel)
+    //   .setUpInterval("compress-video", () => publishOutbox("compress-video")),
+    generatePdfPublisher
+      .setChannel(channel)
+      .setUpInterval("generate-pdf", () => publishOutbox("generate-pdf")),
   ])
 }
 

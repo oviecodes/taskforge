@@ -9,9 +9,9 @@ dotenv.config()
 
 const app = express()
 app.use(express.json())
-app.use(authMiddleware)
+
 app.use("/", healthRoutes)
-app.use("/render", renderRoutes)
+app.use("/render", authMiddleware, renderRoutes)
 
 app.use(errorHandler)
 

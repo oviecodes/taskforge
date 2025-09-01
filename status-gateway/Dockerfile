@@ -14,4 +14,4 @@ COPY . .
 
 RUN npm run build
 
-CMD ["sh", "-c", "export NODE_ENV=development && npm run dev"]
+CMD ["sh", "-c", "export NODE_ENV=development && npm start"]

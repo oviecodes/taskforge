@@ -56,17 +56,26 @@ spec:
               valueFrom: { configMapKeyRef: { name: taskforge-config, key: S3_SIGNED_URL_EXP } }
             
 
+          startupProbe:
+            httpGet: { path: /health, port: 8200 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 18  # 3 minutes total
           readinessProbe:
             httpGet: { path: /health, port: 8200 }
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            initialDelaySeconds: 5   # After startup probe succeeds
+            periodSeconds: 30        # Check every 30s (gentle)
+            timeoutSeconds: 10       # Allow slow responses
+            failureThreshold: 3      # 90s to mark unready
           livenessProbe:
             httpGet: { path: /live, port: 8200 }
-            initialDelaySeconds: 15
-            periodSeconds: 30
+            initialDelaySeconds: 60  # Wait 1min after startup
+            periodSeconds: 60        # Check every minute (very gentle)
+            timeoutSeconds: 15       # Allow slow responses  
+            failureThreshold: 5      # 5min before restart
           resources:
-            requests: { cpu: "100m", memory: "128Mi" }
-            limits:   { cpu: "1",    memory: "512Mi" }
+            requests: { cpu: "100m", memory: "128Mi" }  # Already good for Minikube
+            limits:   { cpu: "500m", memory: "512Mi" }  # Reduced CPU limit for Minikube
 ---
 apiVersion: v1
 kind: Service

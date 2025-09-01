@@ -12,7 +12,7 @@ export async function publishOutbox(type: string) {
   const pending = await db
     .table("Outbox")
     .where("status", "pending")
-    .where({ type })
+    .where({ eventType: type })
     .limit(20)
     .orderBy("createdAt", "asc")
 
