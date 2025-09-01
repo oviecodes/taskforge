@@ -1,0 +1,28 @@
+import express, { NextFunction, Request, Response } from "express"
+const router = express.Router()
+
+router.get("/health", (req: Request, res: Response, next: NextFunction) => {
+  const healthStatus = {
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    services: {
+      database: { status: "up" },
+      redis: { status: "up" },
+    },
+    uptime: process.uptime(),
+  }
+
+  // check failure rate from circuit breaker
+
+  const statusCode = healthStatus.status === "healthy" ? 200 : 503
+  res.status(statusCode).json(healthStatus)
+})
+
+router.get("/live", (req: Request, res: Response, next: NextFunction) => {
+  res.status(200).json({
+    status: "alive",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+  })
+})

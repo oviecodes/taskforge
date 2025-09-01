@@ -242,6 +242,11 @@ class SmartOutboxPublisher {
     }, this.publishInterval)
 
     this.publishInterval = publishInterval
+    log.info({
+      message: `${routingKey} tasks currently publishing at ${
+        publishInterval / 1000
+      } secs`,
+    })
   }
 
   cancelInterval() {

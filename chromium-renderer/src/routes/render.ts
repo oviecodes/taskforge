@@ -3,11 +3,25 @@ import { launchBrowser } from "../utils/browser"
 import { Request, Response } from "express"
 import { uploadBufferToS3 } from "../utils/s3"
 
+import {
+  pdfErrorCounter,
+  pdfProcessedCounter,
+  pdfProcessingDuration,
+  pdfTasksCounter,
+} from "../utils/metrics"
+
 const router = express.Router()
 
 router.post("/pdf", async (req: Request, res: Response) => {
   const { task_id, url, options } = req.body
-  if (!url) return res.status(400).json({ error: "Missing URL" })
+  pdfTasksCounter.inc()
+
+  if (!url) {
+    pdfErrorCounter.inc()
+    return res.status(400).json({ error: "Missing URL" })
+  }
+
+  const end = pdfProcessingDuration.startTimer()
 
   try {
     const browser = await launchBrowser()
@@ -23,13 +37,18 @@ router.post("/pdf", async (req: Request, res: Response) => {
 
     const s3Url = await uploadBufferToS3(task_id, pdfBuffer, "pdf")
 
+    pdfProcessedCounter.labels("success").inc()
+
     return res.status(200).json({
       success: true,
       url: s3Url,
     })
   } catch (err: any) {
     console.error("[PDF ERROR]", err)
+    pdfErrorCounter.inc()
     return res.status(500).json({ error: "Failed to render and upload PDF" })
+  } finally {
+    end()
   }
 })
 
