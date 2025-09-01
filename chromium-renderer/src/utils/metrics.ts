@@ -4,14 +4,12 @@ import client from "prom-client"
 
 export const register = new client.Registry()
 
-// Optional: set global default labels
 register.setDefaultLabels({
   service: "chromium-renderer",
 })
 
 client.collectDefaultMetrics({ register })
 
-// Custom metrics
 export const pdfTasksCounter = new client.Counter({
   name: "pdf_tasks_recieved_total",
   help: "Total number of PDF generation tasks recieved",
