@@ -1,6 +1,6 @@
 import {
   connectToRabbitMQ,
-  // resizeImagePublisher,
+  resizeImagePublisher,
   // compressVideoPublisher,
   generatePdfPublisher,
 } from "./rabbitmq.service"
@@ -51,15 +51,15 @@ const initializeServices = async () => {
 
 const runServicePublishers = async (channel: any) => {
   await Promise.all([
-    // resizeImagePublisher
-    //   .setChannel(channel)
-    //   .setUpInterval("resize-image", () => publishOutbox("resize-image")),
+    resizeImagePublisher
+      .setChannel(channel)
+      .setUpInterval("resize-image", () => publishOutbox("resize-image")),
     // compressVideoPublisher
     //   .setChannel(channel)
     //   .setUpInterval("compress-video", () => publishOutbox("compress-video")),
-    generatePdfPublisher
-      .setChannel(channel)
-      .setUpInterval("generate-pdf", () => publishOutbox("generate-pdf")),
+    // generatePdfPublisher
+    //   .setChannel(channel)
+    //   .setUpInterval("generate-pdf", () => publishOutbox("generate-pdf")),
   ])
 }
 
