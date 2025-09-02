@@ -1,14 +1,11 @@
 import redis
 import json
-from config import REDIS_URL
+from config import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
 from utils.logger import log
 
 logger = log("generate-pdf")
 
-
-print("redis-url", REDIS_URL)
-
-r = redis.Redis.from_url(REDIS_URL)
+r = redis.Redis(host=REDIS_HOST, password=REDIS_PASSWORD, port=REDIS_PORT, socket_connect_timeout=15, socket_timeout=5, max_connections=5)
 TASK_TTL_SECONDS = 300
 
 
