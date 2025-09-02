@@ -59,20 +59,6 @@ def handle_message(ch, method, properties, body):
                     cache_task_output(task_type, task_id, result)
                     return
 
-                if retry_count >= MAX_RETRIES:
-                    logger.error("Max retries reached - {retries} retries", retries=retry_count)
-                    publish_status(task_id, "failed", 0, f"Max retries reached ({retry_count})")
-                    ## increment DLQ
-                    task_dropped_total.labels(type=task_type).inc()
-                    # Move to final DLQ
-                    ch.basic_publish(
-                        exchange=EXCHANGE_NAME,
-                        routing_key=f"{ROUTING_KEY}.dead",
-                        body=body
-                    )
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    return
-
                 logger.info("Received task - {retryCount}", retryCount=retry_count)
                 publish_status(task_id, "processing", 10, "Starting PDF generation")
 
@@ -91,6 +77,22 @@ def handle_message(ch, method, properties, body):
                 ch.basic_ack(delivery_tag=method.delivery_tag)
 
             except Exception as e:
+                
+                if retry_count >= MAX_RETRIES:
+                    logger.error("Max retries reached - {retries} retries", retries=retry_count)
+                    publish_status(task_id, "failed", 0, f"Max retries reached ({retry_count})")
+                    ## increment DLQ
+                    task_dropped_total.labels(type=task_type).inc()
+                    # Move to final DLQ
+                    ch.basic_publish(
+                        exchange=EXCHANGE_NAME,
+                        routing_key=f"{ROUTING_KEY}.dead",
+                        body=body
+                    )
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                    
+                    return
+            
                 tb = traceback.format_exc()
                 logger.error("Task failed \n {error} \n {traceback}", error=str(e), traceback=tb)
 
@@ -98,11 +100,6 @@ def handle_message(ch, method, properties, body):
 
                 ## increment metrics retry count
                 task_retry_attempts_total.labels(type=task_type).inc()
-                try:
-                    task = json.loads(body)
-                    task_id = task.get("id", "unknown")
-                except:
-                    task_id = "unknown"
 
                 publish_status(task_id, "failed", 0, str(e))
                 ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False)

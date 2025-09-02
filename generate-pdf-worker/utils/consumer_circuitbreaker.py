@@ -1,4 +1,5 @@
 import time
+import traceback
 from .logger import log
 logger = log(service="generate-pdf")
 
@@ -18,7 +19,8 @@ class ConsumerCircuitBreaker:
             self.onSuccess()
             return result
         except Exception as e:
-            logger.error(message="An Error Occured During Consumer Execution", exception=str(e))
+            tb = traceback.format_exc()
+            logger.error("function execution failed \n {error} \n {traceback}", error=str(e), traceback=tb)
             self.onFailure()
             raise
             
