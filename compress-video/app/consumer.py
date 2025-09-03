@@ -13,15 +13,14 @@ from dotenv import load_dotenv
 load_dotenv()
 logger = log("compress-video")
 
-# ENV
+
 RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672")
 QUEUE_NAME = os.getenv("QUEUE_NAME")
 EXCHANGE_NAME = os.getenv("EXCHANGE_NAME")
 ROUTING_KEY = os.getenv("ROUTING_KEY")
 
-# TTL-Based DLX Configuration (following gold standard)
 MAX_RETRIES = 3
-RETRY_DELAY_MS = 30000  # 30 seconds (following resize-image pattern)
+RETRY_DELAY_MS = 30000
 
 MAX_RABBITMQ_RETRIES = 10
 RETRY_DELAY_SECONDS = 5
@@ -100,7 +99,7 @@ def start_consumer():
     )
     channel.queue_bind(queue=QUEUE_NAME, exchange=EXCHANGE_NAME, routing_key=ROUTING_KEY)
 
-    # Final dead-letter queue (manual drop only)
+    # Final dead-letter queue declaration
     channel.queue_declare(queue=final_dlq, durable=True)
 
     logger.info(f"✅ TTL-Based DLX Ready → Queue: {QUEUE_NAME} | Retry: {retry_exchange} | TTL: {RETRY_DELAY_MS / 1000}s")
@@ -146,9 +145,9 @@ def start_consumer():
                 except Exception as pub_err:
                     logger.error(f"❌ DLQ publish failed: {pub_err}")
                     
-                ch.basic_ack(delivery_tag=method.delivery_tag)  # Ack to prevent redelivery
+                ch.basic_ack(delivery_tag=method.delivery_tag)
             else:
-                # TTL-Based DLX Pattern: Let RabbitMQ handle retry (automatic routing)
+                
                 task_retry_attempts_total.labels("compress-video").inc()
                 ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False)  # Triggers DLX → retry queue
 
