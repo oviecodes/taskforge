@@ -79,7 +79,8 @@ spec:
               valueFrom: { secretKeyRef: { name: taskforge-secrets, key: S3_BUCKET_NAME } }
             - name: S3_SIGNED_URL_EXP
               valueFrom: { configMapKeyRef: { name: taskforge-config, key: S3_SIGNED_URL_EXP } }
-
+            - name: REDIS_TASK_TTL
+              value: "300"
 ---
 # compress-video-service.yaml
 apiVersion: v1

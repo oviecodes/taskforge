@@ -5,6 +5,7 @@ import time
 from app.utils.logger import log
 import threading
 from app.utils.metrics import task_dropped_total, task_processed_total, task_processing_duration_seconds, task_retry_attempts_total
+from app.utils.circuit_breaker import circuitbreaker
 
 from app import task_worker
 from dotenv import load_dotenv
@@ -117,7 +118,7 @@ def start_consumer():
             
             logger.info(f"📦 Received task: {task_id} (retry {retry_count}/{MAX_RETRIES})")
 
-            task_worker.handle_task(task)
+            circuitbreaker.execute(lambda: task_worker.handle_task(task))
 
             # Success - acknowledge the message
             ch.basic_ack(delivery_tag=method.delivery_tag)

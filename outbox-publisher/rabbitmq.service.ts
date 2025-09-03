@@ -259,6 +259,6 @@ class SmartOutboxPublisher {
   }
 }
 
-export const resizeImagePublisher = new SmartOutboxPublisher("resize-image")
-// export const compressVideoPublisher = new SmartOutboxPublisher("compress-video")
-export const generatePdfPublisher = new SmartOutboxPublisher("generate-pdf")
+// export const resizeImagePublisher = new SmartOutboxPublisher("resize-image")
+export const compressVideoPublisher = new SmartOutboxPublisher("compress-video")
+// export const generatePdfPublisher = new SmartOutboxPublisher("generate-pdf")

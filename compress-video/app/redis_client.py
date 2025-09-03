@@ -10,9 +10,20 @@ load_dotenv()
 logger = log("compress-video")
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = os.getenv("REDIS_PORT", 6379)
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
+
 TASK_TTL_SECONDS = int(os.getenv("REDIS_TASK_TTL", 300))  # 5 minutes
 
-rdb = redis.Redis.from_url(REDIS_URL)
+rdb = redis.Redis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    password=REDIS_PASSWORD,
+    socket_connect_timeout=15,
+    socket_timeout=5,
+    max_connections=5
+)
 
 def publish_result(task_id: str, result: dict):
     """
