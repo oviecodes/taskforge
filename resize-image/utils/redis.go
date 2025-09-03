@@ -94,3 +94,12 @@ func Get_cached_output(task_type string, task_id string) (map[string]any, error)
 
 	return result, nil
 }
+
+func IsRedisHealthy() bool {
+	if rdb == nil {
+		return false
+	}
+	
+	_, err := rdb.Ping(ctx).Result()
+	return err == nil
+}

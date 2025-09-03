@@ -49,16 +49,8 @@ func Start_metrics_server() error {
 
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		logger.Info().Msgf("Health check requested from %s", r.RemoteAddr)
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
-	mux.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
-		logger.Info().Msgf("Liveness check requested from %s", r.RemoteAddr)
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
+	mux.HandleFunc("/health", HealthHandler)
+	mux.HandleFunc("/live", LivenessHandler)
 	logger.Info().Msg("🚀 Starting HTTP server on :8200...")
 	return http.ListenAndServe(":8200", mux)
 }

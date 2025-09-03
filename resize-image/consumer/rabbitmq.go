@@ -63,6 +63,8 @@ func StartRabbitMQConsumer() error {
 	retryQueue := queueName + ".retry"
 	finalDLQ := queueName + ".dead"
 
+	var err error
+
 	// Connect
 	connection, err = amqp.Dial(rabbitmqURL)
 	if err != nil {
@@ -198,9 +200,15 @@ func IsRabbitMQHealthy() bool {
 	}
 
 	// Check if connection is still open and channel is usable
-	if connection.IsClosed() || channel.IsClosed() {
+	if connection.IsClosed() {
 		return false
 	}
 
-	return true
+	// For amqp.Channel, we need to check if it's nil or closed differently
+	select {
+	case <-channel.NotifyClose(make(chan *amqp.Error, 1)):
+		return false
+	default:
+		return true
+	}
 }
