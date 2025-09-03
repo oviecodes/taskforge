@@ -126,9 +126,11 @@ func StartRabbitMQConsumer() error {
 		return fmt.Errorf("failed to start consumer: %w", err)
 	}
 
+	var circuitBreaker = utils.NewCircuitBreaker(5, 60)
+
 	go func() {
-		start := time.Now()
 		for msg := range msgs {
+			start := time.Now()
 			var task TaskMessage
 			if err := json.Unmarshal(msg.Body, &task); err != nil {
 				log.Printf("❌ Invalid task format: %v", err)
@@ -143,7 +145,11 @@ func StartRabbitMQConsumer() error {
 			// Pure DLX Pattern: Check x-death headers to determine retry count
 			retryCount := getRetryCount(msg.Headers)
 
-			if err := image.ProcessResizeTask(context.Background(), task.ID, task.Payload); err != nil {
+			err := circuitBreaker.Execute(func() error {
+				return image.ProcessResizeTask(context.Background(), task.ID, task.Payload)
+			})
+
+			if err != nil {
 				contextLogger.Info().Msgf("⛔ Task %s failed [retry %d/%d]", task.ID, retryCount, MAX_RETRIES)
 				utils.TaskProcessedTotal.With(prometheus.Labels{"type": "resize-image", "status": "failed"}).Inc()
 

@@ -17,8 +17,8 @@ class ConsumerCircuitBreaker:
                 self.state = "HALF_OPEN"
                 logger.info("Circuit state has been set to HALF_OPEN")
             else:
-                logger.info("Circuit OPEN - Can't process requests currently")
-                raise
+                logger.error("Circuit OPEN - Can't process requests currently")
+                raise Exception("Circuit breaker is OPEN")
         
         try:
             result = toExecute()
