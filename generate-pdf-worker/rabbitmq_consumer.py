@@ -5,6 +5,10 @@ from utils.logger import log
 
 logger = log(service="generate-pdf")
 
+# Global connection and channel for health checks
+connection = None
+channel = None
+
 # Retry queue config
 RETRY_EXCHANGE = f"{EXCHANGE_NAME}.retry"
 RETRY_QUEUE = f"{QUEUE_NAME}.retry"
@@ -12,10 +16,11 @@ RETRY_ROUTING_KEY = f"{ROUTING_KEY}.retry"
 
 
 def connect_and_consume():
+    global connection, channel
 
-    conn = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
+    connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
 
-    channel = conn.channel()
+    channel = connection.channel()
 
     # Main exchange
     channel.exchange_declare(exchange=EXCHANGE_NAME, exchange_type="direct", durable=True)
@@ -49,3 +54,18 @@ def connect_and_consume():
     channel.queue_bind(exchange=EXCHANGE_NAME, queue=QUEUE_NAME, routing_key=ROUTING_KEY)
 
     return channel
+
+
+def isRabbitMQHealthy():
+    try:
+        if connection is None or channel is None:
+            return False
+        
+        # Check if connection is still open and channel is usable
+        if connection.is_closed or channel.is_closed:
+            return False
+            
+        return True
+    except Exception as e:
+        logger.error(f"RabbitMQ health check failed: {e}")
+        return False

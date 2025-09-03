@@ -3,7 +3,6 @@ import json
 import os
 import time
 from app.utils.logger import log
-import threading
 from app.utils.metrics import task_dropped_total, task_processed_total, task_processing_duration_seconds, task_retry_attempts_total
 from app.utils.circuit_breaker import circuitbreaker
 
@@ -25,6 +24,9 @@ RETRY_DELAY_MS = 30000
 MAX_RABBITMQ_RETRIES = 10
 RETRY_DELAY_SECONDS = 5
 
+connection = None
+channel = None
+
 # TTL-Based DLX Pattern: Extract retry count from RabbitMQ's x-death headers
 def get_retry_count(properties):
     """Extract retry count from RabbitMQ's x-death headers (automatic DLX tracking)"""
@@ -38,34 +40,39 @@ def get_retry_count(properties):
             return death.get("count", 0)
     return 0
 
-def heartbeat_thread(connection):
-    while True:
-        time.sleep(10)
-        try:
-            connection.process_data_events()
-        except Exception as e:
-            logger.error(f"❌ Heartbeat failed: {e}")
-            break
 
 def start_consumer():
+    global connection, channel
     retry_exchange = f"{EXCHANGE_NAME}.retry"
     retry_queue = f"{QUEUE_NAME}.retry"
     retry_routing_key = f"{ROUTING_KEY}.retry"
     final_dlq = f"{QUEUE_NAME}.dead"
 
     # Connect with retry logic
-    connection = None
     for attempt in range(1, MAX_RABBITMQ_RETRIES + 1):
         try:
             logger.info(f"📡 Connecting to RabbitMQ (Attempt {attempt}/{MAX_RABBITMQ_RETRIES})...")
-            params = pika.URLParameters(RABBITMQ_URL)
-            params.heartbeat = 30
-            params.blocked_connection_timeout = 60
-            connection = pika.BlockingConnection(params)
+            
+            # Use simpler connection parameters to avoid pika issues
+            url = RABBITMQ_URL
+            if "?" in url:
+                url += "&heartbeat=600&blocked_connection_timeout=300"
+            else:
+                url += "?heartbeat=600&blocked_connection_timeout=300"
+            
+            logger.info(f"Connecting to: {url.replace(url.split('@')[0].split('//')[1], '***:***')}")
+            connection = pika.BlockingConnection(pika.URLParameters(url))
             channel = connection.channel()
+            
+            # Set QoS immediately after channel creation
+            channel.basic_qos(prefetch_count=1)
+            
+            logger.info("✅ Connected to RabbitMQ successfully")
             break
         except Exception as e:
             logger.error(f"❌ RabbitMQ connection failed: {e}")
+            connection = None
+            channel = None
             if attempt < MAX_RABBITMQ_RETRIES:
                 time.sleep(RETRY_DELAY_SECONDS)
             else:
@@ -103,8 +110,6 @@ def start_consumer():
     channel.queue_declare(queue=final_dlq, durable=True)
 
     logger.info(f"✅ TTL-Based DLX Ready → Queue: {QUEUE_NAME} | Retry: {retry_exchange} | TTL: {RETRY_DELAY_MS / 1000}s")
-    # Start heartbeat background thread
-    threading.Thread(target=heartbeat_thread, args=(connection,), daemon=True).start()
 
     def callback(ch, method, properties, body):
         start_time = time.time()
@@ -117,6 +122,7 @@ def start_consumer():
             
             logger.info(f"📦 Received task: {task_id} (retry {retry_count}/{MAX_RETRIES})")
 
+            # Use circuit breaker only for the actual task processing
             circuitbreaker.execute(lambda: task_worker.handle_task(task))
 
             # Success - acknowledge the message
@@ -155,13 +161,38 @@ def start_consumer():
         duration = time.time() - start_time
         task_processing_duration_seconds.labels(type="compress-video").observe(duration)
 
-    # Start consuming
-    channel.basic_qos(prefetch_count=1)
+    # Start consuming (QoS already set above)
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback)
 
     try:
+        logger.info("🚀 Starting message consumption...")
         channel.start_consuming()
     except KeyboardInterrupt:
         logger.warning("🛑 Consumer stopped manually")
         channel.stop_consuming()
         connection.close()
+    except Exception as e:
+        logger.error(f"❌ Consumer error: {e}")
+        try:
+            channel.stop_consuming()
+            connection.close()
+        except:
+            pass
+        raise
+
+
+def isRabbitMQHealthy():
+    try:
+        if connection is None or channel is None:
+            return False
+        
+        # Check if connection is still open and channel is usable
+        if connection.is_closed or channel.is_closed:
+            return False
+            
+        # Check if our service queue exists (passive=True won't create it)
+        # channel.queue_declare(queue=QUEUE_NAME, passive=True)
+        return True
+    except Exception as e:
+        logger.error(f"RabbitMQ health check failed: {e}")
+        return False

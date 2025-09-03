@@ -26,6 +26,10 @@ type TaskMessage struct {
 
 var logger = utils.Log("resize-image")
 
+// Global connection and channel for health checks
+var connection *amqp.Connection
+var channel *amqp.Channel
+
 // getRetryCount extracts retry count from RabbitMQ's x-death headers (automatic DLX tracking)
 func getRetryCount(headers amqp.Table) int {
 	if headers == nil {
@@ -60,30 +64,30 @@ func StartRabbitMQConsumer() error {
 	finalDLQ := queueName + ".dead"
 
 	// Connect
-	conn, err := amqp.Dial(rabbitmqURL)
+	connection, err = amqp.Dial(rabbitmqURL)
 	if err != nil {
 		return fmt.Errorf("RabbitMQ connect error: %w", err)
 	}
-	ch, err := conn.Channel()
+	channel, err = connection.Channel()
 	if err != nil {
 		return fmt.Errorf("channel error: %w", err)
 	}
 
 	// 1. Declare main exchange
-	err = ch.ExchangeDeclare(exchangeName, "direct", true, false, false, false, nil)
+	err = channel.ExchangeDeclare(exchangeName, "direct", true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("main exchange declare error: %w", err)
 	}
 
 	// 2. Declare retry exchange
-	err = ch.ExchangeDeclare(retryExchange, "direct", true, false, false, false, nil)
+	err = channel.ExchangeDeclare(retryExchange, "direct", true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("retry exchange declare error: %w", err)
 	}
 
 	// 3. Declare retry queue - routes back to main queue after TTL
 	// Uses RabbitMQ's x-death headers to track retry count automatically
-	_, err = ch.QueueDeclare(retryQueue, true, false, false, false, amqp.Table{
+	_, err = channel.QueueDeclare(retryQueue, true, false, false, false, amqp.Table{
 		"x-dead-letter-exchange":    exchangeName, // Back to main queue after TTL
 		"x-dead-letter-routing-key": routingKey,
 		"x-message-ttl":             int32(30000), // Start with 30s, will use exponential backoff in consumer
@@ -91,37 +95,39 @@ func StartRabbitMQConsumer() error {
 	if err != nil {
 		return fmt.Errorf("retry queue declare error: %w", err)
 	}
-	err = ch.QueueBind(retryQueue, routingKey, retryExchange, false, nil)
+	err = channel.QueueBind(retryQueue, routingKey, retryExchange, false, nil)
 	if err != nil {
 		return fmt.Errorf("retry queue bind error: %w", err)
 	}
 
 	// 4. Declare main task queue - routes to retry exchange on failure
-	_, err = ch.QueueDeclare(queueName, true, false, false, false, amqp.Table{
+	_, err = channel.QueueDeclare(queueName, true, false, false, false, amqp.Table{
 		"x-dead-letter-exchange":    retryExchange, // Failure → retry queue
 		"x-dead-letter-routing-key": routingKey,
 	})
 	if err != nil {
 		return fmt.Errorf("main queue declare error: %w", err)
 	}
-	err = ch.QueueBind(queueName, routingKey, exchangeName, false, nil)
+	err = channel.QueueBind(queueName, routingKey, exchangeName, false, nil)
 	if err != nil {
 		return fmt.Errorf("main queue bind error: %w", err)
 	}
 
 	// 5. Declare final dead letter queue (no TTL - manual intervention required)
-	_, err = ch.QueueDeclare(finalDLQ, true, false, false, false, nil)
+	_, err = channel.QueueDeclare(finalDLQ, true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("final DLQ declare error: %w", err)
 	}
 
 	logger.Info().Msgf("✅ Pure DLX Ready → Queue: %s | Retry: %s | TTL: 30s", queueName, retryExchange)
 
-	err = ch.Qos(1, 0, false)
-	// ch.QueueInspect(queueName)
+	err = channel.Qos(1, 0, false)
+	if err != nil {
+		return fmt.Errorf("QoS error: %w", err)
+	}
 
 	// 7. Start consuming with manual ack
-	msgs, err := ch.Consume(queueName, "", false, false, false, false, nil)
+	msgs, err := channel.Consume(queueName, "", false, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("failed to start consumer: %w", err)
 	}
@@ -158,7 +164,7 @@ func StartRabbitMQConsumer() error {
 					contextLogger.Info().Msgf("💀 Task %s exceeded retry limit, sending to final DLQ", task.ID)
 					utils.TaskDroppedTotal.With(prometheus.Labels{"type": "resize-image"}).Inc()
 
-					err := ch.Publish("", finalDLQ, false, false, amqp.Publishing{
+					err := channel.Publish("", finalDLQ, false, false, amqp.Publishing{
 						ContentType: "application/json",
 						Body:        msg.Body,
 					})
@@ -184,4 +190,17 @@ func StartRabbitMQConsumer() error {
 	}()
 
 	select {} // block
+}
+
+func IsRabbitMQHealthy() bool {
+	if connection == nil || channel == nil {
+		return false
+	}
+
+	// Check if connection is still open and channel is usable
+	if connection.IsClosed() || channel.IsClosed() {
+		return false
+	}
+
+	return true
 }
