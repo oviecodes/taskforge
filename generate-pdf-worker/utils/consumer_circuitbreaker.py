@@ -8,11 +8,17 @@ class ConsumerCircuitBreaker:
         self.failureCount = 0
         self.state = "CLOSED"
         self.threshold = 5
+        self.lastFailureTime = 0
+        self.timeout = 60
 
     def execute(self, toExecute):
         if self.state == "OPEN":
-            logger.info("Circuit OPEN - Can't process requests currently")
-            return
+            if time.time() - self.lastFailureTime > self.timeout:
+                self.state = "HALF_OPEN"
+                logger.info("Circuit state has been set to HALF_OPEN")
+            else:
+                logger.info("Circuit OPEN - Can't process requests currently")
+                raise
         
         try:
             result = toExecute()
@@ -32,18 +38,21 @@ class ConsumerCircuitBreaker:
 
     def onFailure(self):
         self.failureCount+=1
+        self.lastFailureTime = time.time()
 
         if self.failureCount >= self.threshold:
             self.state = "OPEN"
-            time.sleep(60)
-            self.state = "CLOSED"
 
 
     def getState(self):
         return { 
                 "state": self.state, 
                 "failureCount": self.failureCount, 
-                "threshold": self.threshold 
+                "threshold": self.threshold,
+                "timeSinceLastFailure": time.time() - self.lastFailureTime if self.lastFailureTime > 0 else 0
                 }
+    
+    def getTimeSinceLastFailure(self):
+        return time.time() - self.lastFailureTime if self.lastFailureTime > 0 else 0
     
 circuitbreaker = ConsumerCircuitBreaker()
