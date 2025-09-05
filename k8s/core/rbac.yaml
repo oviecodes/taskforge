@@ -1,0 +1,25 @@
+# k8s/core/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: taskforge
+  name: taskforge-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: taskforge-rolebinding
+  namespace: taskforge
+subjects:
+  - kind: ServiceAccount
+    name: taskforge-sa
+    namespace: taskforge
+roleRef:
+  kind: Role
+  name: taskforge-role
+  apiGroup: rbac.authorization.k8s.io

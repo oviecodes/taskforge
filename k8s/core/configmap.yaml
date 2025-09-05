@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskforge-config
+  namespace: taskforge
+data:
+  # QUEUE_NAME: "task.queue"
+  # EXCHANGE_NAME: "task.exchange"
+  # ROUTING_KEY: "task.route"
+  # RETRY_DELAY_MS: "10000"
+  # MAX_RETRIES: "5"
+  # REDIS_CHANNEL_PREFIX: "task:"
+  # STATUS_TTL_SECONDS: "300"
+  RABBITMQ_HOST: "rabbitmq.taskforge.svc.cluster.local"
+  RABBITMQ_PORT: "5672"
+  REDIS_HOST: "redis.taskforge.svc.cluster.local"
+  REDIS_PORT: "6379"
+  POSTGRES_URL: "postgres.taskforge.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  TASK_RETRY_DELAY: "10000"
+  REDIS_TASK_TTL: "300"
+  PDF_OUTPUT_DIR: /tmp/pdf-output
+  S3_SIGNED_URL_EXP: "600"
+  CHROMIUM_RENDERER_URL: "http://chromium-renderer.taskforge.svc.cluster.local:3000"
