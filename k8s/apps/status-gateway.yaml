@@ -68,7 +68,7 @@ metadata:
   namespace: taskforge
 spec:
   ports:
-    - port: 4000
+    - port: 80
       targetPort: 4000
   selector:
     app: status-gateway

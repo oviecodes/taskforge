@@ -4,7 +4,7 @@ metadata:
   name: gateway-node
   namespace: taskforge
   # annotations:
-    # Optional: gzip, timeouts, rate limits, etc.
+  #   kubernetes.io/ingress.class: nginx
 spec:
   ingressClassName: nginx
   rules:

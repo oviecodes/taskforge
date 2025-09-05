@@ -13,7 +13,7 @@ const MAX_RETRIES = 10
 const RABBITMQ_URL = process.env.RABBITMQ_URL!
 const EXCHANGE_NAME = process.env.EXCHANGE_NAME!
 
-const log = withLogContext({ service: "outbox-publisher-rabbitmq" })
+const log = withLogContext({ service: "outbox-publisher" })
 
 export const connectToRabbitMQ = async () => {
   let attempts = 0
@@ -194,6 +194,10 @@ class SmartOutboxPublisher {
         queues[routingKey]
       )
 
+      log.info(
+        `Queue Stats: [messageCount - ${messageCount}, consumerCount - ${consumerCount}]`
+      )
+
       const backlogPerConsumer =
         consumerCount > 0 ? messageCount / consumerCount : messageCount
 
@@ -259,6 +263,6 @@ class SmartOutboxPublisher {
   }
 }
 
-// export const resizeImagePublisher = new SmartOutboxPublisher("resize-image")
+export const resizeImagePublisher = new SmartOutboxPublisher("resize-image")
 export const compressVideoPublisher = new SmartOutboxPublisher("compress-video")
-// export const generatePdfPublisher = new SmartOutboxPublisher("generate-pdf")
+export const generatePdfPublisher = new SmartOutboxPublisher("generate-pdf")

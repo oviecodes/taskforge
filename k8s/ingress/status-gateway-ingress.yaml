@@ -3,7 +3,9 @@ kind: Ingress
 metadata:
   name: status-gateway
   namespace: taskforge
-  # annotations:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     # Optional: gzip, timeouts, rate limits, etc.
 spec:
   ingressClassName: nginx
