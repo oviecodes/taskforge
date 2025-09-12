@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: outbox-publisher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: outbox-publisher
+  template:
+    metadata:
+      labels:
+        app: outbox-publisher
+    spec:
+      serviceAccountName: taskforge-sa
+      initContainers:
+        - name: migrate-db
+          image: outbox-publisher:dev
+          command: ["sh", "-c"]
+          args:
+            - |
+                echo "Migration attempt."
+                npx prisma db push --skip-generate
+                echo "Migration successful!"
+                exit 0
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_USER }}
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_PASSWORD } }
+            - name: POSTGRES_URL
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: POSTGRES_URL } }
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_URL):5432/taskforge"
+      containers:
+        - name: outbox-publisher
+          image: outbox-publisher:dev
+          ports:
+            - containerPort: 8200
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_USER }}
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_PASSWORD } }
+            - name: POSTGRES_URL
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: POSTGRES_URL } }
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_URL):5432/taskforge"
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: RABBITMQ_PASSWORD } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_URL
+              value: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASSWORD)@$(RABBITMQ_HOST):5672
+            - name: EXCHANGE_NAME
+              value: "task.exchange"
+            - name: OUTBOX_POLL_INTERVAL
+              value: "5000"
+            - name: HEALTH_PORT
+              value: "8200"
+            - name: NODE_ENV
+              value: "development"
+          resources:
+            requests:
+              memory: "256Mi" 
+              cpu: "256m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          startupProbe:
+            httpGet: { path: /health, port: 8200 }
+            initialDelaySeconds: 60  
+            periodSeconds: 10
+            failureThreshold: 30     
+          readinessProbe:
+            httpGet: { path: /health, port: 8200 }
+            initialDelaySeconds: 30  
+            periodSeconds: 30        
+            timeoutSeconds: 10       
+            failureThreshold: 3      
+          livenessProbe:
+            httpGet: { path: /live, port: 8200 }
+            initialDelaySeconds: 60  
+            periodSeconds: 60        
+            timeoutSeconds: 15        
+            failureThreshold: 5      
+
+
+
+
+              

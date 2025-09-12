@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: taskforge-prod
+
+resources:
+  - ../../../base/ingress/
+
+patches:
+  - target:
+      kind: Ingress
+      name: gateway-node-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: api.taskforge.com
+#      - op: add
+#       path: /spec/tls
+        # value:
+          # - hosts:
+              # - api.taskforge.com
+            # secretName: api-taskforge-tls
+  - target:
+      kind: Ingress
+      name: status-gateway-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: status.taskforge.com
+#      - op: add
+#        path: /spec/tls
+        # value:
+        #   - hosts:
+        #       - status.taskforge.com
+        #     secretName: socket-taskforge-tls
+

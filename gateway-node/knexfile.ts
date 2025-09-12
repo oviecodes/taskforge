@@ -21,9 +21,7 @@ const config: { [key: string]: Knex.Config } = {
   staging: {
     client: "postgresql",
     connection: {
-      database: "my_db",
-      user: "username",
-      password: "password",
+      connectionString: appConfig.database_url,
     },
     pool: {
       min: 2,
@@ -37,9 +35,7 @@ const config: { [key: string]: Knex.Config } = {
   production: {
     client: "postgresql",
     connection: {
-      database: "my_db",
-      user: "username",
-      password: "password",
+      connectionString: appConfig.database_url,
     },
     pool: {
       min: 2,

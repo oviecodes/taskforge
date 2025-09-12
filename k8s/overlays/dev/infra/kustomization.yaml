@@ -4,6 +4,9 @@ kind: Kustomization
 namespace: taskforge-dev
 
 resources:
-  - ../../base
-  - ingress/
+  - ../../../base/infra/
+  - namespace.yaml
 
+patchesStrategicMerge:
+  - configmap.yaml
+  - secrets.yaml

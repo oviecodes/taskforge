@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-node
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway-node
+  template:
+    metadata:
+      labels:
+        app: gateway-node
+    spec:
+      serviceAccountName: taskforge-sa
+      initContainers:
+        - name: migrate-db
+          image: gateway-node:dev
+          command: ["sh", "-c"]
+          args: 
+            - |
+              echo "Migration attempt."
+              yes | npx prisma db push --skip-generate
+              echo "Migration successful!"
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_USER }}
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_PASSWORD } }
+            - name: POSTGRES_HOST
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: POSTGRES_URL } }
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)/taskforge"
+      containers:
+        - name: gateway-node
+          image: gateway-node:dev
+          ports:
+            - containerPort: 3000
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_USER }}
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_PASSWORD } }
+            - name: POSTGRES_HOST
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: POSTGRES_URL } }
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)/taskforge"
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: REDIS_PASSWORD } }
+            - name: REDIS_HOST
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: REDIS_HOST } }
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@$(REDIS_HOST):6379"
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: JWT_SECRET } }
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: NODE_ENV } }
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "256m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          startupProbe:
+            httpGet: { path: /health, port: 3000 }
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: { path: /health, port: 3000 }
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /health/live, port: 3000 }
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5

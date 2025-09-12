@@ -1,0 +1,219 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      evaluation_interval: 5s
+
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+                - "alertmanager.monitoring.svc.cluster.local:9093"
+
+    scrape_configs:
+      - job_name: 'gateway-node'
+        static_configs:
+          - targets: ['gateway-node.taskforge-prod.svc.cluster.local:80']
+
+      - job_name: "outbox-publisher"
+        static_configs:
+          - targets: ["outbox-publisher.taskforge-prod.svc.cluster.local:8200"]
+
+      - job_name: 'status-gateway'
+        static_configs:
+          - targets: ['status-gateway.taskforge-prod.svc.cluster.local:4100']
+
+      - job_name: 'generate-pdf'
+        static_configs:
+          - targets: ['generate-pdf.taskforge-prod.svc.cluster.local:8000']
+
+      - job_name: "compress-video"
+        static_configs:
+          - targets: ["compress-video.taskforge-prod.svc.cluster.local:8100"]
+
+      - job_name: "resize-image"
+        static_configs:
+          - targets: ["resize-image.taskforge-prod.svc.cluster.local:8200"]
+          
+      - job_name: 'rabbitmq'
+        static_configs:
+          - targets: ['rabbitmq-exporter.taskforge-prod.svc.cluster.local:9419']
+
+      - job_name: 'redis'
+        static_configs:
+          - targets: ['redis-exporter.taskforge-prod.svc.cluster.local:9121']
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: monitoring
+data:
+  services-alerts.yml: |
+    groups:
+      - name: services.alerts
+        rules:
+          - alert: ServiceDown
+            expr: up{job=~"status-gateway|generate-pdf|resize-image|compress-video"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Service {{ $labels.job }} is down"
+              description: "{{ $labels.job }} has not been scraping metrics for over 1 minute."
+
+          - alert: HighErrorRate
+            expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High error rate in {{ $labels.job }}"
+              description: "Error rate > 10% for the last 5 minutes."
+
+          - alert: TaskProcessingSlow
+            expr: histogram_quantile(0.95, rate(task_duration_seconds_bucket[5m])) > 30
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Slow task processing in {{ $labels.job }}"
+              description: "95th percentile task processing time > 30 seconds."
+
+  rabbitmq-alerts.yml: |
+    groups:
+      - name: rabbitmq.alerts
+        rules:
+          - alert: RabbitMQDown
+            expr: rabbitmq_up == 0
+            for: 30s
+            labels:
+              severity: critical
+            annotations:
+              summary: "RabbitMQ is down"
+              description: "RabbitMQ node is not responding to metrics scraping."
+
+          - alert: RabbitMQQueueTooLarge
+            expr: rabbitmq_queue_messages_ready > 1000
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "RabbitMQ queue backlog is high"
+              description: "Queue has {{ $value }} ready messages."
+
+          - alert: RabbitMQConsumersLow
+            expr: rabbitmq_queue_consumers < 1
+            for: 30s
+            labels:
+              severity: critical
+            annotations:
+              summary: "No consumers for queue"
+              description: "Queue has zero consumers attached."
+
+  redis-alerts.yml: |
+    groups:
+      - name: redis.alerts
+        rules:
+          - alert: RedisDown
+            expr: redis_up == 0
+            for: 30s
+            labels:
+              severity: critical
+            annotations:
+              summary: "Redis is down"
+              description: "Redis instance is not responding to metrics scraping."
+
+          - alert: RedisMemoryHigh
+            expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Redis memory usage high"
+              description: "Memory usage is at {{ $value | humanizePercentage }} of the configured max."
+
+          - alert: RedisEvictionsHappening
+            expr: increase(redis_evicted_keys_total[5m]) > 0
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Redis key evictions detected"
+              description: "Keys are being evicted due to memory pressure."
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          ports:
+            - containerPort: 9090
+          args:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--storage.tsdb.path=/prometheus/'
+            - '--web.console.libraries=/etc/prometheus/console_libraries'
+            - '--web.console.templates=/etc/prometheus/consoles'
+            - '--storage.tsdb.retention.time=200h'
+            - '--web.enable-lifecycle'
+          volumeMounts:
+            - name: prometheus-config
+              mountPath: /etc/prometheus/prometheus.yml
+              subPath: prometheus.yml
+            - name: prometheus-rules
+              mountPath: /etc/prometheus/rules/
+            - name: prometheus-storage
+              mountPath: /prometheus/
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+      volumes:
+        - name: prometheus-config
+          configMap:
+            name: prometheus-config
+        - name: prometheus-rules
+          configMap:
+            name: prometheus-rules
+        - name: prometheus-storage
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+  type: ClusterIP

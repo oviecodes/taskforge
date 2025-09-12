@@ -8,7 +8,9 @@
     "build": "tsc",
     "start": "tsc && node --unhandled-rejections=strict ./dist/index.js",
     "dev": "export NODE_ENV=development && tsc-watch --onSuccess 'node ./dist/index.js'",
-    "db-push": "npx prisma db push --skip-generate --accept-data-loss"
+    "db-migrate": "npx prisma migrate deploy",
+    "db-generate": "npx prisma generate",
+    "db-dev": "npx prisma db push"
   },
   "keywords": [],
   "author": "",

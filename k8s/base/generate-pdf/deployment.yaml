@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: generate-pdf
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: generate-pdf
+  template:
+    metadata:
+      labels:
+        app: generate-pdf
+    spec:
+      serviceAccountName: taskforge-sa
+      containers:
+        - name: generate-pdf
+          image: generate-pdf:dev
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          startupProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 18
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /live, port: 8000 }
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5
+          env:
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: RABBITMQ_PASSWORD } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_URL
+              value: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASSWORD)@$(RABBITMQ_HOST):5672
+            - name: REDIS_HOST
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: REDIS_HOST } }
+            - name: REDIS_PORT
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: REDIS_PORT } }
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: REDIS_PASSWORD } }
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@$(REDIS_HOST):6379"
+            - name: REDIS_DB
+              value: "0"
+            - name: QUEUE_NAME
+              value: "task.generate-pdf"
+            - name: EXCHANGE_NAME
+              value: "task.exchange"
+            - name: ROUTING_KEY
+              value: "generate-pdf"
+            - name: RETRY_DELAY_MS
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: TASK_RETRY_DELAY } }
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: AWS_ACCESS_KEY_ID } }
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: AWS_SECRET_ACCESS_KEY } }
+            - name: AWS_REGION
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: AWS_REGION } }
+            - name: S3_BUCKET_NAME
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: S3_BUCKET_NAME } }
+            - name: S3_SIGNED_URL_EXP
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: S3_SIGNED_URL_EXP } }
+            - name: PDF_OUTPUT_DIR
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: PDF_OUTPUT_DIR } }
+            - name: CHROMIUM_RENDERER_URL
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: CHROMIUM_RENDERER_URL } }
+            - name: CHROMIUM_RENDERER_TOKEN
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: CHROMIUM_RENDERER_TOKEN } }
+            - name: PORT
+              value: "8000"
+

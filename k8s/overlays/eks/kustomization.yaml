@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: taskforge-prod
+
+resources:
+  - ../../base
+
+patchesStrategicMerge:
+  - ingress-alb.yaml
+  
+patchesJson6902:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: prometheus
+      namespace: monitoring
+    path: storage-class-patch.yaml

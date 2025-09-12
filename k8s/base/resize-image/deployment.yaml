@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resize-image
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: resize-image }
+  template:
+    metadata:
+      labels: { app: resize-image }
+    spec:
+      serviceAccountName: taskforge-sa
+      containers:
+        - name: resize-image
+          image: resize-image:dev
+          ports:
+            - containerPort: 8200
+              name: http
+          env:
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: RABBITMQ_PASSWORD } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_URL
+              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASSWORD)@$(RABBITMQ_HOST):5672"
+            - name: REDIS_HOST
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: REDIS_HOST } }
+            - name: REDIS_PORT
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: REDIS_PORT } }
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: REDIS_PASSWORD } }
+            - name: REDIS_ADDR
+              value: "$(REDIS_HOST):6379"
+            - name: REDIS_DB
+              value: "0"
+            - name: EXCHANGE_NAME
+              value: "task.exchange"
+            - name: QUEUE_NAME
+              value: "task.resize-image"
+            - name: ROUTING_KEY
+              value: "resize-image"
+            - name: RETRY_DELAY_MS
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: TASK_RETRY_DELAY } }
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: AWS_ACCESS_KEY_ID } }
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: AWS_SECRET_ACCESS_KEY } }
+            - name: AWS_REGION
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: AWS_REGION } }
+            - name: S3_BUCKET_NAME
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: S3_BUCKET_NAME } }
+            - name: S3_SIGNED_URL_EXP
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: S3_SIGNED_URL_EXP } }
+            
+
+          startupProbe:
+            httpGet: { path: /health, port: 8200 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 18
+          readinessProbe:
+            httpGet: { path: /health, port: 8200 }
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /live, port: 8200 }
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits:   { cpu: "500m", memory: "256Mi" }
+

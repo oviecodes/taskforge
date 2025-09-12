@@ -224,7 +224,7 @@ services:
     environment:
       RABBIT_URL: http://rabbitmq:15672
       RABBIT_USER: taskforge
-      RABBIT_PASSWORD: secretpassRabbitmq
+      RABBIT_PASSWORD: ${RABBITMQ_PASSWORD}
       RABBIT_EXPORTER_LOG_LEVEL: info
     ports:
       - "9419:9419"

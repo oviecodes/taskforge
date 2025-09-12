@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: outbox-publisher-health
+spec:
+  ports:
+    - port: 8200
+      targetPort: 8200
+  selector:
+    app: outbox-publisher
+  type: ClusterIP

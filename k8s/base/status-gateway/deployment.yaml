@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: status-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: status-gateway
+  template:
+    metadata:
+      labels:
+        app: status-gateway
+    spec:
+      serviceAccountName: taskforge-sa
+      containers:
+        - name: status-gateway
+          image: status-gateway:dev
+          ports:
+            - containerPort: 4000
+            - containerPort: 4100
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: REDIS_PASSWORD } }
+            - name: REDIS_HOST
+              valueFrom: { configMapKeyRef: { name: taskforge-config, key: REDIS_HOST } }
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@$(REDIS_HOST):6379"
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: {  name: taskforge-secrets, key: JWT_SECRET } }
+            - name: PORT
+              value: "4000"
+            - name: DEBUG_PORT
+              value: "4100"
+            - name: DEBUG_AUTH_TOKEN
+              valueFrom: { secretKeyRef: {name: taskforge-secrets, key: DEBUG_AUTH_TOKEN }}
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          startupProbe:
+            httpGet: { path: /health, port: 4100 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 18
+          readinessProbe:
+            httpGet: { path: /health, port: 4100 }
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /live, port: 4100 }
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5
+
+
+
