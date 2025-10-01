@@ -27,8 +27,11 @@ const createDatabaseConnection = (): Knex => {
 
   // Add connection event listeners for monitoring
   dbConnection.on("query-error", (error, obj) => {
-    logger.error("❌ Database query error", { error: error.message, sql: obj.sql })
-    
+    logger.error("❌ Database query error", {
+      error: error.message,
+      sql: obj.sql,
+    })
+
     // Let connection pool handle reconnection automatically
     if (isConnectionError(error)) {
       logger.warn("⚠️ Database connection error detected")
@@ -40,15 +43,15 @@ const createDatabaseConnection = (): Knex => {
 
 const isConnectionError = (error: any): boolean => {
   const connectionErrors = [
-    'ECONNRESET',
-    'ECONNREFUSED', 
-    'ETIMEDOUT',
-    'ENOTFOUND',
-    'connection terminated',
-    'server closed the connection'
+    "ECONNRESET",
+    "ECONNREFUSED",
+    "ETIMEDOUT",
+    "ENOTFOUND",
+    "connection terminated",
+    "server closed the connection",
   ]
-  
-  return connectionErrors.some(errorType => 
+
+  return connectionErrors.some((errorType) =>
     error.message.toLowerCase().includes(errorType.toLowerCase())
   )
 }
@@ -68,7 +71,6 @@ export const isDatabaseHealthy = async (): Promise<boolean> => {
     return false
   }
 }
-
 
 class DatabaseCircuitBreaker {
   private failures = 0

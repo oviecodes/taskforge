@@ -36,14 +36,17 @@ const config: { [key: string]: Knex.Config } = {
     client: "postgresql",
     connection: {
       connectionString: appConfig.database_url,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     },
     pool: {
       min: 2,
       max: 10,
     },
-    migrations: {
-      tableName: "knex_migrations",
-    },
+    // migrations: {
+    //   tableName: "knex_migrations",
+    // },
   },
 }
 
