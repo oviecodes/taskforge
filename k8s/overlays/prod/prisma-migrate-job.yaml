@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prisma-db-push
+  namespace: gateway-node-prod
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: prisma
+          image: node:18-slim
+          command: ["npx", "prisma", "db", "push"]
+          workingDir: /app
+          volumeMounts:
+            - name: prisma-schema
+              mountPath: /app/prisma
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: gateway-node-secrets, key: POSTGRES_USER } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: gateway-node-secrets, key: POSTGRES_PASSWORD } }
+            - name: POSTGRES_HOST
+              valueFrom: { configMapKeyRef: { name: gateway-node-config, key: POSTGRES_URL } }
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)/taskforge"
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: gateway-node-secrets, key: REDIS_PASSWORD } }
+            - name: REDIS_HOST
+              valueFrom: { configMapKeyRef: { name: gateway-node-config, key: REDIS_HOST } }
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@$(REDIS_HOST):6379"
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: gateway-node-secrets, key: JWT_SECRET } }
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              valueFrom: { configMapKeyRef: { name: gateway-node-config, key: NODE_ENV } }
+      volumes:
+        - name: prisma-schema
+          configMap:
+            name: prisma-configmap

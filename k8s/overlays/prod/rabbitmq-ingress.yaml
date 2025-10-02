@@ -1,0 +1,25 @@
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: rabbitmq-management
+#   namespace: rabbitmq
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /
+#     cert-manager.io/cluster-issuer: taskforge-http-01-production
+# spec:
+#   ingressClassName: internal-nginx
+#   rules:
+#     - host: rabbitmq-taskforge.internal.oviecodes.xyz
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: rabbitmq
+#                 port:
+#                   number: 15672
+#   tls:
+#     - hosts:
+#         - rabbitmq-taskforge.internal.oviecodes.xyz
+#       secretName: rabbitmq-internal-tls

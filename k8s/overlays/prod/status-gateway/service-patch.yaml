@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: status-gateway
+spec:
+  selector:
+    app: status-gateway
+  type: ClusterIP
+
+

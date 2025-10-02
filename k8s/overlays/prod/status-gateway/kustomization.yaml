@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: status-gateway-prod
+
+resources:
+  - infra/
+  - ../../../base/status-gateway
+  - hpa.yaml
+  - ingress/
+  # - deployment.yaml
+
+patches:
+  - path: ./env-patches.yaml
+  - path: ./service-patch.yaml
+      
+
+
+      
+

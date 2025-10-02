@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prisma-configmap
+  namespace: gateway-node-prod
+data:
+  schema.prisma: |
+    generator client {
+      provider = "prisma-client-js"
+      output   = "../src/generated/prisma"
+    }
+
+    datasource db {
+      provider = "postgresql"
+      url      = env("DATABASE_URL")
+    }
+
+    model User {
+      id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+      email        String   @unique
+      password     String
+      refreshToken String?  @db.Text
+      createdAt    DateTime @default(now())
+    }
+
+    model Task {
+      id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+      type      String
+      userId    String   @db.Uuid
+      payload   Json
+      createdAt DateTime @default(now())
+    }
+
+    model Outbox {
+      id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+      eventType    String
+      payload      Json
+      taskId       String
+      status       String    @default("pending")
+      createdAt    DateTime  @default(now())
+      dispatchedAt DateTime?
+    }
+
+

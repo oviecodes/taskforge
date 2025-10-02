@@ -57,6 +57,7 @@ services:
   gateway-node:
     build:
       context: ../gateway-node
+      target: development
     container_name: taskforge-gateway
     ports:
       - "3000:3000"
@@ -253,7 +254,7 @@ services:
     environment:
       # S3 credentials (use an AWS role in prod if running on EC2/EKS)
       AWS_ACCESS_KEY_ID: ${LOKI_AWS_ACCESS_KEY_ID}
-      
+
       AWS_SECRET_ACCESS_KEY: ${LOKI_AWS_SECRET_ACCESS_KEY}
       LOKI_AWS_REGION: ${LOKI_AWS_REGION}
       LOKI_S3_BUCKET: ${LOKI_S3_BUCKET}

@@ -7,7 +7,8 @@ venv
 **.key
 **.pem
 
-# EKS deployment guide - contains costs and setup details
+# EKS deployment guides - contain costs and setup details
 EKS-DEPLOYMENT.md
+EKS_SETUP_GUIDE.md
 .github/
 MIGRATION-MANUAL.md

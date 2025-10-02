@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway-node-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: taskforge-http-01-production
+spec:
+  ingressClassName: external-nginx
+  rules:
+    - host: api-taskforge.oviecodes.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway-node
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - api-taskforge.oviecodes.xyz
+      secretName: api-taskforge-oviecodes-xyz
+

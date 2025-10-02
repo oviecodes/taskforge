@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: gateway-node-prod
+
+resources:
+  - infra/
+  - ../../../base/gateway-node
+  - hpa.yaml
+  - ingress/
+  # - deployment.yaml
+
+patches:
+  - path: ./env-patches.yaml
+  - path: ./service-patch.yaml
+  # - target:
+  #     kind: Deployment
+  #     name: gateway-node
+  #   patch: |-
+  #     - op: replace
+  #       path: /spec/template/spec/initContainers/0/image
+  #       value: 596438087393.dkr.ecr.us-east-1.amazonaws.com/taskforge/gateway-node:latest
+  #     - op: replace
+  #       path: /spec/template/spec/containers/0/image
+  #       value: 596438087393.dkr.ecr.us-east-1.amazonaws.com/taskforge/gateway-node:latest
+
+      
+
+
+      
+

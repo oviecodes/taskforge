@@ -3,7 +3,6 @@ kind: Deployment
 metadata:
   name: gateway-node
 spec:
-  replicas: 2
   selector:
     matchLabels:
       app: gateway-node
@@ -13,24 +12,24 @@ spec:
         app: gateway-node
     spec:
       serviceAccountName: taskforge-sa
-      initContainers:
-        - name: migrate-db
-          image: gateway-node:dev
-          command: ["sh", "-c"]
-          args: 
-            - |
-              echo "Migration attempt."
-              yes | npx prisma db push --skip-generate
-              echo "Migration successful!"
-          env:
-            - name: POSTGRES_USER
-              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_USER }}
-            - name: POSTGRES_PASSWORD
-              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_PASSWORD } }
-            - name: POSTGRES_HOST
-              valueFrom: { configMapKeyRef: { name: taskforge-config, key: POSTGRES_URL } }
-            - name: DATABASE_URL
-              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)/taskforge"
+      # initContainers:
+      #   - name: migrate-db
+      #     image: gateway-node:migrate
+      #     # command: ["sh", "-c"]
+      #     # args: 
+      #     #   - |
+      #     #     echo "Migration attempt."
+      #     #     echo yes | npx prisma db push --skip-generate
+      #     #     echo "Migration successful!"
+      #     env:
+      #       - name: POSTGRES_USER
+      #         valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_USER }}
+      #       - name: POSTGRES_PASSWORD
+      #         valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_PASSWORD } }
+      #       - name: POSTGRES_HOST
+      #         valueFrom: { configMapKeyRef: { name: taskforge-config, key: POSTGRES_URL } }
+      #       - name: DATABASE_URL
+      #         value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)/taskforge"
       containers:
         - name: gateway-node
           image: gateway-node:dev

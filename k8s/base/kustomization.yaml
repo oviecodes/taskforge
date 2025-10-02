@@ -3,6 +3,6 @@ kind: Kustomization
 
 resources:
   - gateway-node/
-  - status-gateway/
-  - outbox-publisher/
-  - resize-image/
+  # - status-gateway/
+  # - outbox-publisher/
+  # - resize-image/
