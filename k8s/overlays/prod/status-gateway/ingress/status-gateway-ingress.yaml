@@ -8,7 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
     cert-manager.io/cluster-issuer: taskforge-http-01-production
 spec:
-  ingressClassName: nginx
+  ingressClassName: external-nginx
   rules:
     - host: status-taskforge.oviecodes.xyz
       http:

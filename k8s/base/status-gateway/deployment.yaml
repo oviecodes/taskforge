@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: status-gateway
 spec:
-  replicas: 2
+  # replicas: 2
   selector:
     matchLabels:
       app: status-gateway
