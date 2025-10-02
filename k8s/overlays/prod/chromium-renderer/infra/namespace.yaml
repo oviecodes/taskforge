@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chromium-renderer-prod
+  labels:
+    name: chromium-renderer-prod

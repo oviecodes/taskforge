@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chromium-renderer
+spec:
+  selector:
+    matchLabels:
+      app: chromium-renderer
+  template:
+    metadata:
+      labels:
+        app: chromium-renderer
+    spec:
+      containers:
+      - name: chromium-renderer
+        image: 596438087393.dkr.ecr.us-east-1.amazonaws.com/taskforge/chromium-renderer:latest
+        env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: AWS_ACCESS_KEY_ID
+                name: chromium-renderer-secrets
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: AWS_SECRET_ACCESS_KEY
+                name: chromium-renderer-secrets
+          - name: S3_BUCKET_NAME
+            valueFrom: 
+              secretKeyRef:
+                key: S3_BUCKET_NAME
+                name: chromium-renderer-secrets
+          - name: AWS_REGION
+            valueFrom:
+              secretKeyRef:
+                key: AWS_REGION
+                name: chromium-renderer-secrets
+          - name: RENDER_TOKEN
+            valueFrom: 
+              secretKeyRef:
+                key: CHROMIUM_RENDERER_TOKEN
+                name: chromium-renderer-secrets
+          - name: PORT
+            value: "3000"

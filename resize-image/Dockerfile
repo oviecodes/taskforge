@@ -26,7 +26,7 @@ RUN ls -la /app/resize-image
 FROM alpine:latest
 
 # Add metadata
-LABEL maintainer="your-email@example.com"
+LABEL maintainer="oviecodes@gmail.com"
 LABEL description="Image resizing service"
 
 WORKDIR /app

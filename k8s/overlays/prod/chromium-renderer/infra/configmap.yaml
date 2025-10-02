@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chromium-renderer-config
+data:
+  # RABBITMQ_HOST: "rabbitmq.taskforge-prod.svc.cluster.local"
+  RABBITMQ_HOST: "rabbitmq.rabbitmq.svc.cluster.local"
+  RABBITMQ_PORT: "5672"
+  # REDIS_HOST: "redis.taskforge-prod.svc.cluster.local"
+  REDIS_HOST: "redis-master.redis.svc.cluster.local"
+  REDIS_PORT: "6379"
+  # POSTGRES_URL: "postgres.taskforge-prod.svc.cluster.local"
+  POSTGRES_URL: taskforge.cizq40ucuuac.us-east-1.rds.amazonaws.com
+  POSTGRES_PORT: "5432"
+  TASK_RETRY_DELAY: "10000"
+  REDIS_TASK_TTL: "300"
+  PDF_OUTPUT_DIR: /tmp/pdf-output
+  S3_SIGNED_URL_EXP: "600"
+  CHROMIUM_RENDERER_URL: "http://chromium-renderer.taskforge-prod.svc.cluster.local:3000"
+  NODE_ENV: "production"

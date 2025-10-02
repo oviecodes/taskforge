@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: resize-image
+spec:
+  selector:
+    app: resize-image
+  type: ClusterIP

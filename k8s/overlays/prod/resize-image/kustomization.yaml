@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: resize-image-prod
+
+resources:
+  - infra/
+  - ../../../base/resize-image
+  - hpa.yaml
+
+patches:
+  - path: ./env-patches.yaml
+  - path: ./service-patch.yaml
+
+      
+
+
+      
+
