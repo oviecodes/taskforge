@@ -29,3 +29,10 @@ spec:
               value: "4100"
             - name: DEBUG_AUTH_TOKEN
               valueFrom: { secretKeyRef: {name: status-gateway-secrets, key: DEBUG_AUTH_TOKEN }}
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "512m"

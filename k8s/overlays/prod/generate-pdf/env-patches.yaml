@@ -59,3 +59,10 @@ spec:
               valueFrom: { secretKeyRef: { name: generate-pdf-secrets, key: CHROMIUM_RENDERER_TOKEN } }
             - name: PORT
               value: "8000"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

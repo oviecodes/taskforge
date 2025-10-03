@@ -47,3 +47,10 @@ spec:
             value: "3000"
           - name: NODE_ENV
             valueFrom: { configMapKeyRef: { name: gateway-node-config, key: NODE_ENV } }
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "512m"

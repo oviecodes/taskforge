@@ -54,12 +54,12 @@ const runServicePublishers = async (channel: any) => {
     resizeImagePublisher
       .setChannel(channel)
       .setUpInterval("resize-image", () => publishOutbox("resize-image")),
-    // compressVideoPublisher
-    //   .setChannel(channel)
-    //   .setUpInterval("compress-video", () => publishOutbox("compress-video")),
-    // generatePdfPublisher
-    //   .setChannel(channel)
-    //   .setUpInterval("generate-pdf", () => publishOutbox("generate-pdf")),
+    compressVideoPublisher
+      .setChannel(channel)
+      .setUpInterval("compress-video", () => publishOutbox("compress-video")),
+    generatePdfPublisher
+      .setChannel(channel)
+      .setUpInterval("generate-pdf", () => publishOutbox("generate-pdf")),
   ])
 }
 

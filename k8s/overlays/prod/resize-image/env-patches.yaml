@@ -51,3 +51,10 @@ spec:
               valueFrom: { secretKeyRef: { name: resize-image-secrets, key: S3_BUCKET_NAME } }
             - name: S3_SIGNED_URL_EXP
               valueFrom: { configMapKeyRef: { name: resize-image-config, key: S3_SIGNED_URL_EXP } }
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"

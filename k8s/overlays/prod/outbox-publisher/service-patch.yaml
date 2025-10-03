@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: compress-video
+  name: outbox-publisher-health
 spec:
   selector:
-    app: compress-video
+    app: outbox-publisher
   type: ClusterIP

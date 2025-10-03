@@ -13,25 +13,25 @@ spec:
         app: outbox-publisher
     spec:
       serviceAccountName: taskforge-sa
-      initContainers:
-        - name: migrate-db
-          image: outbox-publisher:dev
-          command: ["sh", "-c"]
-          args:
-            - |
-                echo "Migration attempt."
-                npx prisma db push --skip-generate
-                echo "Migration successful!"
-                exit 0
-          env:
-            - name: POSTGRES_USER
-              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_USER }}
-            - name: POSTGRES_PASSWORD
-              valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_PASSWORD } }
-            - name: POSTGRES_URL
-              valueFrom: { configMapKeyRef: { name: taskforge-config, key: POSTGRES_URL } }
-            - name: DATABASE_URL
-              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_URL):5432/taskforge"
+      # initContainers:
+      #   - name: migrate-db
+      #     image: outbox-publisher:dev
+      #     command: ["sh", "-c"]
+      #     args:
+      #       - |
+      #           echo "Migration attempt."
+      #           npx prisma db push --skip-generate
+      #           echo "Migration successful!"
+      #           exit 0
+      #     env:
+      #       - name: POSTGRES_USER
+      #         valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_USER }}
+      #       - name: POSTGRES_PASSWORD
+      #         valueFrom: { secretKeyRef: { name: taskforge-secrets, key: POSTGRES_PASSWORD } }
+      #       - name: POSTGRES_URL
+      #         valueFrom: { configMapKeyRef: { name: taskforge-config, key: POSTGRES_URL } }
+      #       - name: DATABASE_URL
+      #         value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_URL):5432/taskforge"
       containers:
         - name: outbox-publisher
           image: outbox-publisher:dev

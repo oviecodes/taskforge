@@ -1,53 +1,62 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: resize-image
+  name: compress-video
 spec:
   selector:
     matchLabels:
-      app: resize-image
+      app: compress-video
   template:
     metadata:
       labels:
-        app: resize-image
+        app: compress-video
     spec:
       containers:
-      - name: resize-image
-        image: 596438087393.dkr.ecr.us-east-1.amazonaws.com/taskforge/resize-image:latest
+      - name: compress-video
+        image: 596438087393.dkr.ecr.us-east-1.amazonaws.com/taskforge/compress-video:latest
         env:
-            - name: RABBITMQ_USER
-              valueFrom: { secretKeyRef: { name: resize-image-secrets, key: RABBITMQ_USER } }
-            - name: RABBITMQ_PASSWORD
-              valueFrom: { secretKeyRef: { name: resize-image-secrets, key: RABBITMQ_PASSWORD } }
-            - name: RABBITMQ_HOST
-              valueFrom: { configMapKeyRef: { name: resize-image-config, key: RABBITMQ_HOST } }
-            - name: RABBITMQ_URL
-              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASSWORD)@$(RABBITMQ_HOST):5672"
-            - name: REDIS_HOST
-              valueFrom: { configMapKeyRef: { name: resize-image-config, key: REDIS_HOST } }
-            - name: REDIS_PORT
-              valueFrom: { configMapKeyRef: { name: resize-image-config, key: REDIS_PORT } }
-            - name: REDIS_PASSWORD
-              valueFrom: { secretKeyRef: { name: resize-image-secrets, key: REDIS_PASSWORD } }
-            - name: REDIS_ADDR
-              value: "$(REDIS_HOST):6379"
-            - name: REDIS_DB
-              value: "0"
-            - name: EXCHANGE_NAME
-              value: "task.exchange"
-            - name: QUEUE_NAME
-              value: "task.resize-image"
-            - name: ROUTING_KEY
-              value: "resize-image"
-            - name: RETRY_DELAY_MS
-              valueFrom: { configMapKeyRef: { name: resize-image-config, key: TASK_RETRY_DELAY } }
-            - name: AWS_ACCESS_KEY_ID
-              valueFrom: { secretKeyRef: { name: resize-image-secrets, key: AWS_ACCESS_KEY_ID } }
-            - name: AWS_SECRET_ACCESS_KEY
-              valueFrom: { secretKeyRef: { name: resize-image-secrets, key: AWS_SECRET_ACCESS_KEY } }
-            - name: AWS_REGION
-              valueFrom: { secretKeyRef: { name: resize-image-secrets, key: AWS_REGION } }
-            - name: S3_BUCKET_NAME
-              valueFrom: { secretKeyRef: { name: resize-image-secrets, key: S3_BUCKET_NAME } }
-            - name: S3_SIGNED_URL_EXP
-              valueFrom: { configMapKeyRef: { name: resize-image-config, key: S3_SIGNED_URL_EXP } }
+          - name: RABBITMQ_USER
+            valueFrom: { secretKeyRef: { name: compress-video-secrets, key: RABBITMQ_USER } }
+          - name: RABBITMQ_PASSWORD
+            valueFrom: { secretKeyRef: { name: compress-video-secrets, key: RABBITMQ_PASSWORD } }
+          - name: RABBITMQ_URL
+            value: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASSWORD)@rabbitmq.rabbitmq.svc.cluster.local:5672
+          - name: REDIS_HOST
+            valueFrom: { configMapKeyRef: { name: compress-video-config, key: REDIS_HOST } }
+          - name: REDIS_PORT
+            valueFrom: { configMapKeyRef: { name: compress-video-config, key: REDIS_PORT } }
+          - name: REDIS_PASSWORD
+            valueFrom: { secretKeyRef: { name: compress-video-secrets, key: REDIS_PASSWORD } }
+          - name: REDIS_URL
+            value: "redis://:$(REDIS_PASSWORD)@redis-master.redis.svc.cluster.local:6379"
+          - name: REDIS_DB
+            value: "0"
+          - name: QUEUE_NAME
+            value: "task.compress-video"
+          - name: EXCHANGE_NAME
+            value: "task.exchange"
+          - name: ROUTING_KEY
+            value: "compress-video"
+          - name: RETRY_DELAY_MS
+            valueFrom: { configMapKeyRef: { name: compress-video-config, key: TASK_RETRY_DELAY } }
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom: { secretKeyRef: { name: compress-video-secrets, key: AWS_ACCESS_KEY_ID } }
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom: { secretKeyRef: { name: compress-video-secrets, key: AWS_SECRET_ACCESS_KEY } }
+          - name: AWS_REGION
+            valueFrom: { secretKeyRef: { name: compress-video-secrets, key: AWS_REGION } }
+          - name: S3_BUCKET_NAME
+            valueFrom: { secretKeyRef: { name: compress-video-secrets, key: S3_BUCKET_NAME } }
+          - name: S3_SIGNED_URL_EXP
+            valueFrom: { configMapKeyRef: { name: compress-video-config, key: S3_SIGNED_URL_EXP } }
+          - name: REDIS_TASK_TTL
+            value: "300"
+          - name: PORT
+            value: "8100"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
