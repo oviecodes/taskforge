@@ -3,6 +3,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: gateway-node
+  labels:
+    app: gateway-node
+    app.kubernetes.io/name: gateway-node
 spec:
   ports:
     - name: http

@@ -1,0 +1,153 @@
+# k8s/overlays/prod/servicemonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gateway-node-monitor
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/name: gateway-node 
+spec:
+  selector:
+    matchLabels:
+      app: gateway-node
+  namespaceSelector:
+    matchNames:
+      - gateway-node-prod
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: resize-image-monitor
+  namespace: monitoring 
+  labels:
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/name: resize-image
+spec:
+  selector:
+    matchLabels:
+      app: resize-image
+  namespaceSelector:
+    matchNames:
+      - resize-image-prod
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: status-gateway-monitor
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/name: status-gateway-debug
+spec:
+  selector:
+    matchLabels:
+      app: status-gateway-debug
+  namespaceSelector:
+    matchNames:
+      - status-gateway-prod
+  endpoints:
+    - port: http-debug
+      path: /metrics
+      interval: 15s
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: outbox-publisher-monitor
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/name: outbox-publisher
+spec:
+  selector:
+    matchLabels:
+      app: outbox-publisher-health
+  namespaceSelector:
+    matchNames:
+      - outbox-publisher-prod
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: generate-pdf-monitor
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/name: generate-pdf
+spec:
+  selector:
+    matchLabels:
+      app: generate-pdf
+  namespaceSelector:
+    matchNames:
+      - generate-pdf-prod
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: chromium-renderer-monitor
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/name: chromium-renderer
+spec:
+  selector:
+    matchLabels:
+      app: chromium-renderer
+  namespaceSelector:
+    matchNames:
+      - chromium-renderer-prod
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: compress-video-monitor
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/name: compress-video
+spec:
+  selector:
+    matchLabels:
+      app: compress-video
+  namespaceSelector:
+    matchNames:
+      - compress-video-prod
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+
+

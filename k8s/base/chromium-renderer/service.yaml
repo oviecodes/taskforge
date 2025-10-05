@@ -2,6 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: chromium-renderer
+  labels:
+    app: chromium-renderer
+    app.kubernetes.io/name: chromium-renderer
 spec:
   selector:
     app: chromium-renderer

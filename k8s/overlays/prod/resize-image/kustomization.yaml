@@ -7,6 +7,7 @@ resources:
   - infra/
   - ../../../base/resize-image
   - hpa.yaml
+  # - servicemonitor.yaml
 
 patches:
   - path: ./env-patches.yaml

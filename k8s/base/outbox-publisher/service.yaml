@@ -2,10 +2,14 @@ apiVersion: v1
 kind: Service
 metadata:
   name: outbox-publisher-health
+  labels:
+    app: outbox-publisher-health
+    app.kubernetes.io/name: outbox-publisher-health
 spec:
   ports:
     - port: 8200
       targetPort: 8200
+      name: http
   selector:
     app: outbox-publisher
   type: ClusterIP

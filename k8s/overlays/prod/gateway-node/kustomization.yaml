@@ -7,6 +7,7 @@ resources:
   - infra/
   - ../../../base/gateway-node
   - hpa.yaml
+  # - servicemonitor.yaml
   - ingress/
   # - deployment.yaml
 

@@ -2,6 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: resize-image
+  labels:
+    app: resize-image
+    app.kubernetes.io/name: resize-image
 spec:
   type: ClusterIP
   selector: { app: resize-image }
