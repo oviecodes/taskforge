@@ -117,7 +117,7 @@ npm run test:integration
 
 - **Secrets Management**: Kubernetes secrets vs environment variables
 - **JWT Authentication**: Stateless authentication strategy
-- **Network Policies**: (Ready for implementation)
+<!-- - **Network Policies**: (Ready for implementation) -->
 
 ---
 
