@@ -1,0 +1,31 @@
+# apiVersion: monitoring.coreos.com/v1
+# kind: PrometheusRule
+# metadata:
+#   name: taskforge-alerts
+#   namespace: monitoring
+#   labels:
+#     release: kube-prometheus-stack
+# spec:
+#   groups:
+#     - name: pod-alerts
+#       rules:
+#         - alert: PodHighCPUUsage
+#           expr: sum(rate(container_cpu_usage_seconds_total{container!="", namespace!~"monitoring|kube-system"}[2m])) by (pod, namespace)
+#                 > 0.01
+#           for: 2m
+#           labels:
+#             severity: critical
+#           annotations:
+#             summary: "High CPU usage on pod {{ $labels.pod }}"
+#             description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is using more than 80% CPU for 2m."
+
+#     - name: rabbitmq-alerts
+#       rules:
+#         - alert: RabbitMQQueueDepthHigh
+#           expr: rabbitmq_queue_messages_ready{queue!~"amq.*"} > 1
+#           for: 5m
+#           labels:
+#             severity: critical
+#           annotations:
+#             summary: "High RabbitMQ queue depth"
+#             description: "Queue {{ $labels.queue }} has {{ $value }} messages pending for over 5 minutes."

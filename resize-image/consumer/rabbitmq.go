@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"taskforge/resize-image/image"
@@ -51,6 +52,17 @@ func getRetryCount(headers amqp.Table) int {
 }
 
 func StartRabbitMQConsumer() error {
+	var err error
+	var prefetchCount int
+
+	prefetchCount, err = strconv.Atoi(os.Getenv("PREFETCH_COUNT"))
+
+	if err != nil {
+		prefetchCount = 1
+	}
+
+	logger.Info().Msgf("Current prefetch count - %d", prefetchCount)
+
 	rabbitmqURL := os.Getenv("RABBITMQ_URL")
 	queueName := os.Getenv("QUEUE_NAME")
 	exchangeName := os.Getenv("EXCHANGE_NAME")
@@ -62,8 +74,6 @@ func StartRabbitMQConsumer() error {
 	retryExchange := exchangeName + ".retry"
 	retryQueue := queueName + ".retry"
 	finalDLQ := queueName + ".dead"
-
-	var err error
 
 	// Connect
 	connection, err = amqp.Dial(rabbitmqURL)
@@ -123,7 +133,7 @@ func StartRabbitMQConsumer() error {
 
 	logger.Info().Msgf("✅ Pure DLX Ready → Queue: %s | Retry: %s | TTL: 30s", queueName, retryExchange)
 
-	err = channel.Qos(1, 0, false)
+	err = channel.Qos(prefetchCount, 0, false)
 	if err != nil {
 		return fmt.Errorf("QoS error: %w", err)
 	}

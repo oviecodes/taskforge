@@ -1,2 +1,3 @@
 **/secrets.yaml
 **/alertmanager-secrets.yaml
+loki-s3-secret.yaml

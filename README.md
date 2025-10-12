@@ -1,29 +1,30 @@
 # TaskForge - Distributed Task Processing System
 
-A microservices-based distributed system showcasing modern architectural patterns for task processing, built with Node.js (TypeScript), Python, and containerized with Docker/Kubernetes.
+A microservices-based distributed system showcasing modern architectural patterns for task processing, built with Node.js (TypeScript), featuring Go and Python workers, and containerized with Docker/Kubernetes.
 
 ## 🏗️ Architecture Overview
+
+![High Level Architecture](assets/High-level-archictecture.png)
 
 TaskForge demonstrates key distributed systems concepts:
 
 - **API Gateway Pattern**: Central entry point for client requests
 - **Message Queue Processing**: Asynchronous task handling with RabbitMQ
-- **Database Per Service**: Each service owns its data
 - **Event Sourcing**: Outbox pattern for reliable event publishing
 - **Circuit Breaker**: Resilient external service calls
 - **Observability**: Comprehensive monitoring and logging
 
 ### Services
 
-| Service | Language | Purpose |
-|---------|----------|---------|
-| `gateway-node` | TypeScript | API Gateway & Authentication |
-| `status-gateway` | TypeScript | WebSocket status updates |
-| `outbox-publisher` | TypeScript | Event publishing with outbox pattern |
-| `generate-pdf-worker` | Python | PDF generation service |
-| `resize-image` | Go | Image processing service |
-| `compress-video` | Python | Video compression service |
-| `chromium-renderer` | TypeScript | HTML to PDF rendering |
+| Service               | Language   | Purpose                              |
+| --------------------- | ---------- | ------------------------------------ |
+| `gateway-node`        | TypeScript | API Gateway & Authentication         |
+| `status-gateway`      | TypeScript | WebSocket status updates             |
+| `outbox-publisher`    | TypeScript | Event publishing with outbox pattern |
+| `generate-pdf-worker` | Python     | PDF generation service               |
+| `resize-image`        | Go         | Image processing service             |
+| `compress-video`      | Python     | Video compression service            |
+| `chromium-renderer`   | TypeScript | HTML to PDF rendering                |
 
 ### Infrastructure
 
@@ -43,6 +44,7 @@ TaskForge demonstrates key distributed systems concepts:
 ## 🔧 Quick Start
 
 ### Local Development
+
 ```bash
 # Start infrastructure
 cd infra
@@ -55,6 +57,7 @@ cd status-gateway && npm run dev
 ```
 
 ### Production Deployment
+
 ```bash
 # Deploy to Kubernetes
 kubectl apply -k k8s/overlays/prod
@@ -66,6 +69,7 @@ kubectl get pods -n taskforge-prod
 ## 📊 Monitoring & Observability
 
 Access the monitoring stack:
+
 - **Grafana**: http://localhost:3002 (admin/admin)
 - **Prometheus**: http://localhost:9090
 - **AlertManager**: http://localhost:9093
@@ -85,15 +89,18 @@ npm run test:integration
 ## 🏛️ Design Decisions
 
 ### Database Strategy
+
 - **Prisma**: Schema definition and safe migrations
 - **Knex**: High-performance runtime queries for load testing
 
 ### Messaging Patterns
+
 - **Outbox Pattern**: Ensures reliable event publishing
 - **Dead Letter Queues**: Handles failed message processing
 - **Circuit Breaker**: Prevents cascade failures
 
 ### Kubernetes Setup
+
 - **Init Containers**: Database migrations before service start
 - **Health Checks**: Comprehensive liveness/readiness probes
 - **Resource Limits**: Prevents resource starvation
@@ -102,7 +109,7 @@ npm run test:integration
 ## 📈 Scalability Features
 
 - **Horizontal Scaling**: Services can scale independently
-- **Database Connection Pooling**: Efficient resource utilization  
+- **Database Connection Pooling**: Efficient resource utilization
 - **Async Processing**: Non-blocking architecture
 - **Load Balancing**: Kubernetes service discovery
 
