@@ -56,7 +56,7 @@ cd status-gateway && npm run dev
 # ... etc
 ```
 
-### Production Deployment
+<!-- ### Production Deployment
 
 ```bash
 # Deploy to Kubernetes
@@ -64,19 +64,19 @@ kubectl apply -k k8s/overlays/prod
 
 # Monitor deployment
 kubectl get pods -n taskforge-prod
-```
+``` -->
 
 ## 📊 Monitoring & Observability
 
 Access the monitoring stack:
 
-- **Grafana**: http://localhost:3002 (admin/admin)
+- **Grafana**: http://localhost:3002
 - **Prometheus**: http://localhost:9090
 - **AlertManager**: http://localhost:9093
 
 ## 🧪 Testing
 
-```bash
+<!-- ```bash
 # Load testing
 cd load-test
 npm install
@@ -84,7 +84,7 @@ node load-test.js
 
 # Integration testing
 npm run test:integration
-```
+``` -->
 
 ## 🏛️ Design Decisions
 
@@ -116,7 +116,6 @@ npm run test:integration
 ## 🔒 Security
 
 - **Secrets Management**: Kubernetes secrets vs environment variables
-- **Non-root Containers**: Security-hardened container deployment
 - **JWT Authentication**: Stateless authentication strategy
 - **Network Policies**: (Ready for implementation)
 
