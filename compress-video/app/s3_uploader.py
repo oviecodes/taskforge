@@ -23,7 +23,7 @@ def upload_to_s3(file_path: str, s3_key: str) -> str:
     Uploads a file to S3 and returns a signed URL
     """
     try:
-        logger.info(f"🚀 Uploading to S3 → {S3_BUCKET}/{s3_key}")
+        logger.info(f"Uploading to S3 → {S3_BUCKET}/{s3_key}")
         s3.upload_file(
             Filename=file_path,
             Bucket=S3_BUCKET,
@@ -42,7 +42,7 @@ def upload_to_s3(file_path: str, s3_key: str) -> str:
 
     except (BotoCoreError, ClientError) as e:
         s3_upload_failures_total.labels(type="compress-video").inc()
-        logger.error(f"❌ S3 upload failed: {e}")
+        logger.error(f"S3 upload failed: {e}")
         raise RuntimeError("Upload to S3 failed") from e
 
 def file_exists(bucket: str, key: str) -> bool:
@@ -52,7 +52,7 @@ def file_exists(bucket: str, key: str) -> bool:
     except ClientError as e:
         if e.response['Error']['Code'] == "404":
             return False
-        logger.error(f"⚠️ S3 head_object failed: {e}")
+        logger.error(f"S3 head_object failed: {e}")
         return False
 
 def generate_signed_url(s3_key: str) -> str:

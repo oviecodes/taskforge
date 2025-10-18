@@ -52,28 +52,28 @@ def handle_task(task: dict):
                 input_path = os.path.join(tmpdir, "input.mp4")
                 output_path = os.path.join(tmpdir, f"output.{format}")
 
-                # 1. Download video
+                # Download video
                 logger.info(f"⬇️ Downloading video from {video_url}")
                 publish_result(task_id, {"status": "processing", "progress": 10, "message": f"⬇️ Downloading video from {video_url}"})
                 _download_file(video_url, input_path)
 
                 options = {
-                    "format": format,                       # From payload
-                    "bitrate": payload.get("bitrate"),      # Optional
-                    "preset": payload.get("preset")         # Optional
+                    "format": format,                       
+                    "bitrate": payload.get("bitrate"),     
+                    "preset": payload.get("preset")       
                 }
 
-                # 2. Compress
+                # Compress
                 logger.info(f"⚙️ Compressing to {format}")
                 publish_result(task_id, {"status": "processing", "progress": 30, "message": f"⚙️ Compressing to {format}"})
                 compress_video(input_path, output_path, options)
 
-                # 3. Upload to S3
+                # Upload to S3
                 logger.info(f"☁️ Uploading to S3")
                 publish_result(task_id, {"status": "processing", "progress": 80, "message": f"☁️ Uploading to S3"})
                 s3_url = upload_to_s3(output_path, f"compressed-videos/{task_id}.{format}")
 
-                # 4. Publish Redis result
+                # Publish Redis result
                 result = {
                     "progress": 100,
                     "success": True,
@@ -84,7 +84,7 @@ def handle_task(task: dict):
                 logger.info(f"✅ Task {task_id} complete: {s3_url}")
 
         except Exception as e:
-            logger.error(f"❌ Task {task_id} failed: {e}")
+            logger.error(f"Task {task_id} failed: {e}")
             logger.debug(traceback.format_exc())
 
             result = {
@@ -95,7 +95,7 @@ def handle_task(task: dict):
             raise e
         
         finally: 
-            # 🧹 Cleanup temp file no matter what
+            # Cleanup temp file no matter what
             safe_delete(output_path)
 
 

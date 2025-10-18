@@ -28,7 +28,7 @@ def compress_video(input_path: str, output_path: str, options: dict = {}):
         acodec = "aac"
 
     try:
-        logger.info(f"🎬 Compressing with: vcodec={vcodec}, acodec={acodec}, bitrate={bitrate}, preset={preset}")
+        logger.info(f"Compressing with: vcodec={vcodec}, acodec={acodec}, bitrate={bitrate}, preset={preset}")
 
         (
             ffmpeg
@@ -42,16 +42,16 @@ def compress_video(input_path: str, output_path: str, options: dict = {}):
                 audio_bitrate='128k',
                 preset=preset,
                 movflags='+faststart',
-                map_metadata=-1  # Strip metadata
+                map_metadata=-1 
             )
             .overwrite_output()
             .run(quiet=False)
         )
 
-        logger.info(f"✅ FFmpeg compression finished → {output_path}")
+        logger.info(f"FFmpeg compression finished → {output_path}")
 
     except ffmpeg.Error as e:
         ffmpeg_failures_total.labels(codec=vcodec, format=format).inc()
-        logger.error("❌ FFmpeg compression failed")
+        logger.error("FFmpeg compression failed")
         logger.error(e.stderr.decode() if e.stderr else str(e))
         raise RuntimeError("Compression failed") from e

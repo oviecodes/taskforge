@@ -14,7 +14,7 @@ REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 
-TASK_TTL_SECONDS = int(os.getenv("REDIS_TASK_TTL", 300))  # 5 minutes
+TASK_TTL_SECONDS = int(os.getenv("REDIS_TASK_TTL", 300))
 
 rdb = redis.Redis(
     host=REDIS_HOST,
@@ -37,29 +37,24 @@ def publish_result(task_id: str, result: dict):
     with logger.contextualize(taskId=task_id):
 
         try:
-            # Set hash (optional: use hset if result is complex)
-            # rdb.set(key, payload)
-            # rdb.expire(key, TASK_TTL_SECONDS)
-
-            # Publish to WebSocket listener(s)
             rdb.publish(key, payload)
 
-            logger.info(f"📡 Redis result published for task {task_id}")
+            logger.info(f"Redis result published for task {task_id}")
         except Exception as e:
-            logger.error(f"❌ Redis publish failed: {e}")
+            logger.error(f"Redis publish failed: {e}")
 
 def cache_task_output(task_type: str, task_id: str, result: dict):
     with logger.contextualize(taskId=task_id):
         key = f"task:{task_type}:{task_id}:output"
         rdb.setex(key, TASK_TTL_SECONDS, json.dumps(result))
-        logger.info(f"💾 Cached output for {key}")
+        logger.info(f"Cached output for {key}")
 
 def get_cached_output(task_type: str, task_id: str):
     with logger.contextualize(taskId=task_id):
         key = f"task:{task_type}:{task_id}:output"
         result = rdb.get(key)
         if result:
-            logger.info(f"♻️ Found cached output for {key}")
+            logger.info(f"Found cached output for {key}")
             return json.loads(result)
         return None
     
