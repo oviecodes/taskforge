@@ -9,6 +9,3 @@ const PORT = config.port
 //   .catch(console.error)
 
 app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`))
-// .on("error", (e) => {
-//   console.log(e)
-// })

@@ -38,7 +38,6 @@ function requireAuth(
   next()
 }
 
-// Comprehensive health check - checks if app can serve traffic
 app.get("/health", async (_, res) => {
   const healthStatus: HealthStatus = {
     status: "healthy",
@@ -50,7 +49,6 @@ app.get("/health", async (_, res) => {
   }
 
   try {
-    // Test Redis connectivity with latency measurement
     const redisStart = Date.now()
     const isHealthy = await isRedisHealthy(redis)
     healthStatus.services.redis.latency = Date.now() - redisStart
@@ -71,7 +69,6 @@ app.get("/health", async (_, res) => {
   res.status(statusCode).json(healthStatus)
 })
 
-// Liveness probe - checks if app is alive (simpler check)
 app.get("/live", (_, res) => {
   res.status(200).json({
     status: "alive",
@@ -81,7 +78,6 @@ app.get("/live", (_, res) => {
   })
 })
 
-// Ready probe - checks if app is ready to serve traffic
 app.get("/ready", async (_, res) => {
   try {
     const isHealthy = await isRedisHealthy(redis)
@@ -114,7 +110,7 @@ app.post(
   express.json(),
   async (req, res) => {
     const taskId = req.params.taskId
-    const payload = req.body // Should match TaskStatusUpdate
+    const payload = req.body
 
     try {
       await broadcastToTask(taskId, payload)

@@ -4,7 +4,7 @@ import dotenv from "dotenv"
 dotenv.config()
 const redis = new Redis(process.env.REDIS_URL!)
 
-const TTL = 60 * 60 // 1 hour (auto-expires stale sockets)
+const TTL = 60 * 60
 
 export class ConnectionStore {
   async registerConnection(userId: string, socketId: string): Promise<void> {

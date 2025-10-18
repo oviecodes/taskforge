@@ -66,7 +66,6 @@ export default function (authUsers) {
       console.log(`VU ${__VU} closed`)
     })
 
-    // Periodic heartbeats (simulate active devices)
     socket.setInterval(() => {
       socket.send(JSON.stringify({ type: "ping" }))
     }, 5000)

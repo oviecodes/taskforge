@@ -18,7 +18,6 @@ import (
 
 var logger = Log("resize-image")
 
-// createS3Client creates and returns an S3 client and bucket name
 func createS3Client(ctx context.Context) (*s3.Client, string, error) {
 	bucket := os.Getenv("S3_BUCKET_NAME")
 	if bucket == "" {
@@ -117,11 +116,11 @@ func CheckFileExists(key string) (bool, error) {
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) {
 			if apiErr.ErrorCode() == "NotFound" || apiErr.ErrorCode() == "NoSuchKey" {
-				return false, nil // File doesn't exist, but no error
+				return false, nil
 			}
 		}
 		return false, fmt.Errorf("error checking if file exists: %w", err)
 	}
 
-	return true, nil // File exists
+	return true, nil
 }

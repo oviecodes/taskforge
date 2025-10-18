@@ -13,7 +13,6 @@ export interface RedisResilienceOptions {
 
 let onReconnectCallback: (() => Promise<void>) | null = null
 
-// Enhanced Redis connection with resilience
 export const createResilientRedis = (
   redisUrl: string,
   reconnectCallback?: () => Promise<void>
@@ -25,7 +24,6 @@ export const createResilientRedis = (
     lazyConnect: false,
     reconnectOnError: (err) => {
       log.error({ error: err.message }, "Redis reconnect on error")
-      // Reconnect on specific error types
       return (
         err.message.includes("READONLY") ||
         err.message.includes("ECONNRESET") ||
@@ -33,20 +31,19 @@ export const createResilientRedis = (
       )
     },
     retryStrategy: (times) => {
-      const delay = Math.min(times * 50, 2000) // Max 2s delay
+      const delay = Math.min(times * 50, 2000)
       log.warn(`Redis retry attempt ${times}, delay: ${delay}ms`)
       return delay
     },
   })
 
-  // Event listeners for monitoring
   redis.on("connect", () => {
-    log.info("✅ Connected to Redis")
+    log.info("Connected to Redis")
   })
 
   redis.on("ready", () => {
-    log.info("✅ Redis connection ready")
-    // Trigger resubscription when connection is restored
+    log.info("Redis connection ready")
+
     if (onReconnectCallback) {
       onReconnectCallback().catch((err) =>
         log.error(
@@ -58,19 +55,19 @@ export const createResilientRedis = (
   })
 
   redis.on("error", (err) => {
-    log.error({ error: err.message }, "❌ Redis connection error")
+    log.error({ error: err.message }, "Redis connection error")
   })
 
   redis.on("close", () => {
-    log.warn("⚠️ Redis connection closed")
+    log.warn("Redis connection closed")
   })
 
   redis.on("reconnecting", (ms: number) => {
-    log.info(`🔄 Reconnecting to Redis in ${ms}ms`)
+    log.info(`Reconnecting to Redis in ${ms}ms`)
   })
 
   redis.on("end", () => {
-    log.warn("🛑 Redis connection ended")
+    log.warn("Redis connection ended")
   })
 
   return redis
@@ -96,7 +93,7 @@ export const reconnectToRedis = async (
   maxRetries = 5
 ): Promise<void> => {
   let retries = 0
-  const baseDelay = 1000 // 1 second
+  const baseDelay = 1000
 
   while (retries < maxRetries) {
     try {
@@ -108,7 +105,7 @@ export const reconnectToRedis = async (
       }
     } catch (error) {
       retries++
-      const delay = Math.min(baseDelay * Math.pow(2, retries - 1), 30000) // Max 30 seconds
+      const delay = Math.min(baseDelay * Math.pow(2, retries - 1), 30000)
 
       log.error(
         {

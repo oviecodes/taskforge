@@ -9,8 +9,6 @@ import {
 dotenv.config()
 const redis = redisWithResilience(process.env.REDIS_URL!)
 
-// redis resilient connection
-
 const SESSION_PREFIX = "auth:session"
 
 export class AuthSessionService {

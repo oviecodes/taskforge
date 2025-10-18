@@ -6,7 +6,7 @@ import { userService } from "../../services"
 import { authSessionService as sessionService } from "../../services"
 import { db } from "../../lib/db.lib"
 
-const ACCESS_TOKEN_TTL = 15 * 60 // 15 min
+const ACCESS_TOKEN_TTL = 15 * 60
 
 class AuthController {
   async signUp(req: Request, res: Response, next: NextFunction): Promise<void> {

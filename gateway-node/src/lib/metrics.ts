@@ -1,10 +1,7 @@
-// src/lib/metrics.ts
-
 import client from "prom-client"
 
 export const register = new client.Registry()
 
-// Optional: set global default labels
 register.setDefaultLabels({
   service: "gateway-node",
 })

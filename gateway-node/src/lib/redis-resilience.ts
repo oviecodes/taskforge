@@ -29,27 +29,27 @@ export const redisWithResilience = (redisUrl: string): Redis => {
 
   // Event listeners for monitoring
   redis.on("connect", () => {
-    log.info("✅ Connected to Redis")
+    log.info("Connected to Redis")
   })
 
   redis.on("ready", () => {
-    log.info("✅ Redis connection ready")
+    log.info("Redis connection ready")
   })
 
   redis.on("error", (err) => {
-    log.error({ error: err.message }, "❌ Redis connection error")
+    log.error({ error: err.message }, "Redis connection error")
   })
 
   redis.on("close", () => {
-    log.warn("⚠️ Redis connection closed")
+    log.warn("Redis connection closed")
   })
 
   redis.on("reconnecting", (ms: number) => {
-    log.info(`🔄 Reconnecting to Redis in ${ms}ms`)
+    log.info(`Reconnecting to Redis in ${ms}ms`)
   })
 
   redis.on("end", () => {
-    log.warn("🛑 Redis connection ended")
+    log.warn("Redis connection ended")
   })
 
   return redis

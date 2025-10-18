@@ -23,9 +23,8 @@ const createDatabaseConnection = (): Knex => {
     acquireConnectionTimeout: 60000,
   })
 
-  // Add connection event listeners
-  dbConnection.on('query-error', (error, obj) => {
-    log.error({ error: error.message, sql: obj.sql }, 'Database query error')
+  dbConnection.on("query-error", (error, obj) => {
+    log.error({ error: error.message, sql: obj.sql }, "Database query error")
   })
 
   return dbConnection
@@ -36,10 +35,13 @@ export const db = createDatabaseConnection()
 // Health check function
 export const isDatabaseHealthy = async (): Promise<boolean> => {
   try {
-    await db.raw('SELECT 1')
+    await db.raw("SELECT 1")
     return true
   } catch (error) {
-    log.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Database health check failed')
+    log.error(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      "Database health check failed"
+    )
     return false
   }
 }
@@ -51,27 +53,32 @@ export const reconnectToDatabase = async (maxRetries = 5): Promise<void> => {
 
   while (retries < maxRetries) {
     try {
-      log.info(`Attempting database reconnection (${retries + 1}/${maxRetries})`)
-      await db.raw('SELECT 1')
-      log.info('Database reconnection successful')
+      log.info(
+        `Attempting database reconnection (${retries + 1}/${maxRetries})`
+      )
+      await db.raw("SELECT 1")
+      log.info("Database reconnection successful")
       return
     } catch (error) {
       retries++
       const delay = Math.min(baseDelay * Math.pow(2, retries - 1), 30000) // Max 30 seconds
-      
-      log.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        retryAttempt: retries,
-        maxRetries,
-        nextRetryIn: `${delay}ms`
-      }, 'Database reconnection failed')
+
+      log.error(
+        {
+          error: error instanceof Error ? error.message : "Unknown error",
+          retryAttempt: retries,
+          maxRetries,
+          nextRetryIn: `${delay}ms`,
+        },
+        "Database reconnection failed"
+      )
 
       if (retries >= maxRetries) {
-        log.error('Max database reconnection attempts reached')
+        log.error("Max database reconnection attempts reached")
         throw error
       }
 
-      await new Promise(resolve => setTimeout(resolve, delay))
+      await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }
 }

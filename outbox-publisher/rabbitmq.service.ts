@@ -39,10 +39,6 @@ export const connectToRabbitMQ = async () => {
       connection.on("close", () => {
         log.warn("RabbitMQ connection closed")
         isConnected = false
-        // Attempt to reconnect
-        // if (!isReconnecting) {
-        //   setTimeout(() => reconnectToRabbitMQ(), 5000)
-        // }
       })
 
       log.info("✅ Connected to RabbitMQ. Exchanges ready.")
@@ -63,11 +59,11 @@ export const connectToRabbitMQ = async () => {
 
 // Reconnection with exponential backoff
 const reconnectToRabbitMQ = async (maxRetries = 5): Promise<void> => {
-  if (isReconnecting) return // Prevent multiple reconnection attempts
+  if (isReconnecting) return
 
   isReconnecting = true
   let retries = 0
-  const baseDelay = 1000 // 1 second
+  const baseDelay = 1000
 
   while (retries < maxRetries) {
     try {
@@ -82,7 +78,6 @@ const reconnectToRabbitMQ = async (maxRetries = 5): Promise<void> => {
       isConnected = true
       isReconnecting = false
 
-      // Re-add event listeners
       connection.on("error", (err) => {
         log.error({ error: err.message }, "RabbitMQ connection error")
         isConnected = false
@@ -91,16 +86,13 @@ const reconnectToRabbitMQ = async (maxRetries = 5): Promise<void> => {
       connection.on("close", () => {
         log.warn("RabbitMQ connection closed")
         isConnected = false
-        // if (!isReconnecting) {
-        //   setTimeout(() => reconnectToRabbitMQ(), 5000)
-        // }
       })
 
       log.info("RabbitMQ reconnection successful")
       return
     } catch (error) {
       retries++
-      const delay = Math.min(baseDelay * Math.pow(2, retries - 1), 30000) // Max 30 seconds
+      const delay = Math.min(baseDelay * Math.pow(2, retries - 1), 30000)
 
       log.error(
         {
@@ -150,7 +142,7 @@ export const publishToQueue = async (routingKey: string, task: any) => {
         taskId: task.id,
         routingKey,
       },
-      "❌ Error publishing to queue"
+      "Error publishing to queue"
     )
     throw error
   }
@@ -217,7 +209,7 @@ class SmartOutboxPublisher {
         {
           error: error instanceof Error ? error.message : "Unknown error",
         },
-        "❌ Invalid Queue - Queue doesn't exist"
+        "Invalid Queue - Queue doesn't exist"
       )
       return -1
     }
@@ -245,7 +237,7 @@ class SmartOutboxPublisher {
           {
             error: error instanceof Error ? error.message : "Unknown error",
           },
-          `❌ Error in ${this.type} publish loop`
+          `Error in ${this.type} publish loop`
         )
       }
     }, publishInterval)

@@ -1,10 +1,8 @@
-// tests/auth-login.test.js
 import http from "k6/http"
 import { check, sleep } from "k6"
 import { Trend, Rate } from "k6/metrics"
 import { SharedArray } from "k6/data"
 
-// Load users from tests/testUsers.json (array of { email, password })
 const users = new SharedArray(
   "users",
   () => JSON.parse(open(__ENV.USERS_FILE || "./testUsers.json")).users

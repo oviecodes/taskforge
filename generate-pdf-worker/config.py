@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://taskforge:secretpassRabbitmq@localhost:5672")
+RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://******:********@localhost:5672")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", 6739)

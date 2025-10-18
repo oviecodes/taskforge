@@ -15,9 +15,8 @@ const log = withLogContext({ service: "status-gateway" })
 let isSubscribed = false
 const pattern = "task:*:status"
 
-// Create Redis with resubscription callback
 const redis = createResilientRedis(process.env.REDIS_URL!, async () => {
-  // Resubscribe after reconnection only if we're not already subscribed
+  // Resubscribe after reconnection
   if (!isSubscribed || !isAlreadySubscribed(pattern)) {
     log.info("🔄 Resubscribing after reconnection")
     await subscribeToTaskStatus()
@@ -46,12 +45,10 @@ export const subscribeToTaskStatus = async () => {
       return result
     })
   } catch (err) {
-    log.error({ err }, "❌ Failed to subscribe to Redis")
-    // Let IoRedis handle reconnection and retry via callback
+    log.error({ err }, "Failed to subscribe to Redis")
   }
 }
 
-// Handle subscription with resilience
 redis.on("pmessage", async (_, channel, message) => {
   try {
     await redisCircuitBreaker.execute(async () => {
@@ -70,11 +67,9 @@ redis.on("pmessage", async (_, channel, message) => {
   }
 })
 
-// Handle Redis disconnection - track subscription state
 redis.on("close", () => {
   isSubscribed = false
   log.warn("Redis connection closed, subscription lost")
 })
 
-// Export Redis instance and health check function for health endpoints
 export { redis, isRedisHealthy }

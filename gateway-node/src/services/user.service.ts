@@ -15,8 +15,6 @@ export class UserService {
   }
 
   async updateRefreshToken(id: string, refreshToken: string) {
-    // Store refresh token as-is (not hashed)
-    // Refresh tokens should be cryptographically secure random strings
     return dbCircuitBreaker.execute(async () =>
       db("User").update({ refreshToken }).where({ id })
     )

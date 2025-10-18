@@ -5,7 +5,7 @@ import sys
 logger.remove()
 logger.add(
     sys.stdout,
-    serialize=True,  # Output as JSON
+    serialize=True,
     level="INFO"
 )
 

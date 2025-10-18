@@ -108,6 +108,6 @@ func ProcessResizeTask(ctx context.Context, id string, task map[string]interface
 		"url":     s3url,
 	})
 
-	contextLogger.Info().Msgf("✅ Resized image uploaded: %s", s3url)
+	contextLogger.Info().Msgf("Resized image uploaded: %s", s3url)
 	return nil
 }

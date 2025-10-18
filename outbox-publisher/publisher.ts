@@ -1,5 +1,3 @@
-// src/publisher.ts
-
 import { db } from "./connectors/db"
 import { publishToQueue } from "./rabbitmq.service"
 import { withLogContext } from "./lib/log-context"
@@ -30,10 +28,10 @@ export async function publishOutbox(type: string) {
       })
 
       taskCounter.labels(routingKey).inc()
-      context.info(`✅ Dispatched task ${entry.taskId}`)
+      context.info(`Dispatched task ${entry.taskId}`)
     } catch (err) {
       taskErrorCounter.inc()
-      context.error({ err }, `❌ Failed to publish ${entry.id}`)
+      context.error({ err }, `Failed to publish ${entry.id}`)
     } finally {
       end()
     }

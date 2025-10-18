@@ -21,14 +21,13 @@ FROM node:18-alpine AS base
 WORKDIR /usr/src/app
 COPY package*.json ./
 
-# ---- Dependencies (production only) ----
+
 FROM base AS deps
 ENV NODE_ENV=production
-# Use npm ci for reproducible builds
+
 RUN --mount=type=cache,target=/usr/src/app/.npm \
     npm ci --omit=dev
 
-# ---- Builder (for TypeScript / transpile) ----
 FROM base AS builder
 ENV NODE_ENV=development
 RUN --mount=type=cache,target=/usr/src/app/.npm \
@@ -41,12 +40,10 @@ FROM node:18-alpine AS production
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 
-# Copy only what’s needed
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
 COPY package*.json ./
 
 EXPOSE 3000
-# CMD ["node", "dist/server.js"]
 
 CMD ["sh", "-c", "export NODE_ENV=production && npm start"]

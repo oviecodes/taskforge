@@ -45,11 +45,9 @@ export function setup() {
 export default function (authUsers) {
   // If this VU hasn’t initialized yet, do it now
   if (!user) {
-    user = authUsers[__VU % authUsers.length] // stable assignment
+    user = authUsers[__VU % authUsers.length]
     // user = authUsers
     const url = `wss://status-taskforge.oviecodes.xyz?token=${user.accessToken}`
-
-    // console.log("here")
 
     // open once
     socket = ws.connect(url, {}, (sock) => {
@@ -90,15 +88,11 @@ export default function (authUsers) {
     }
   )
 
-  // console.log("task created", res)
-
-  // check(res, { "task created": (r) => r.status === 201 })
-
   // Send subscription via the existing WS connection
   const taskId = res.json("taskId")
   if (socket) {
     socket.send(JSON.stringify({ type: "subscribe", taskId }))
   }
 
-  sleep(5) // small delay between iterations
+  sleep(5)
 }

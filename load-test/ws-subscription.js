@@ -39,11 +39,10 @@ export function setup() {
   })
 }
 
-// --- Main scenario ---
 export default function (authUsers) {
   const user = authUsers[__VU % authUsers.length]
   const token = user.accessToken
-  const taskId = `task-${__VU}` // simulated task per VU
+  const taskId = `task-${__VU}`
   const url = `wss://status-taskforge.oviecodes.xyz?token=${token}`
 
   const start = Date.now()
@@ -82,7 +81,7 @@ export default function (authUsers) {
       socket.send(JSON.stringify({ type: "ping" }))
     }, 5000)
 
-    sleep(30) // each VU keeps connection for 30s
+    sleep(30)
   })
 
   check(res, {

@@ -27,7 +27,6 @@ type TaskMessage struct {
 
 var logger = utils.Log("resize-image")
 
-// Global connection and channel for health checks
 var connection *amqp.Connection
 var channel *amqp.Channel
 
@@ -67,15 +66,12 @@ func StartRabbitMQConsumer() error {
 	queueName := os.Getenv("QUEUE_NAME")
 	exchangeName := os.Getenv("EXCHANGE_NAME")
 	routingKey := os.Getenv("ROUTING_KEY")
-	// Pure DLX Pattern: Single retry queue with RabbitMQ x-death tracking
 	const MAX_RETRIES = 3
 
-	// Retry infrastructure
 	retryExchange := exchangeName + ".retry"
 	retryQueue := queueName + ".retry"
 	finalDLQ := queueName + ".dead"
 
-	// Connect
 	connection, err = amqp.Dial(rabbitmqURL)
 	if err != nil {
 		return fmt.Errorf("RabbitMQ connect error: %w", err)
@@ -85,24 +81,20 @@ func StartRabbitMQConsumer() error {
 		return fmt.Errorf("channel error: %w", err)
 	}
 
-	// 1. Declare main exchange
 	err = channel.ExchangeDeclare(exchangeName, "direct", true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("main exchange declare error: %w", err)
 	}
 
-	// 2. Declare retry exchange
 	err = channel.ExchangeDeclare(retryExchange, "direct", true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("retry exchange declare error: %w", err)
 	}
 
-	// 3. Declare retry queue - routes back to main queue after TTL
-	// Uses RabbitMQ's x-death headers to track retry count automatically
 	_, err = channel.QueueDeclare(retryQueue, true, false, false, false, amqp.Table{
-		"x-dead-letter-exchange":    exchangeName, // Back to main queue after TTL
+		"x-dead-letter-exchange":    exchangeName,
 		"x-dead-letter-routing-key": routingKey,
-		"x-message-ttl":             int32(30000), // Start with 30s, will use exponential backoff in consumer
+		"x-message-ttl":             int32(30000),
 	})
 	if err != nil {
 		return fmt.Errorf("retry queue declare error: %w", err)
@@ -112,9 +104,8 @@ func StartRabbitMQConsumer() error {
 		return fmt.Errorf("retry queue bind error: %w", err)
 	}
 
-	// 4. Declare main task queue - routes to retry exchange on failure
 	_, err = channel.QueueDeclare(queueName, true, false, false, false, amqp.Table{
-		"x-dead-letter-exchange":    retryExchange, // Failure → retry queue
+		"x-dead-letter-exchange":    retryExchange,
 		"x-dead-letter-routing-key": routingKey,
 	})
 	if err != nil {
@@ -125,20 +116,18 @@ func StartRabbitMQConsumer() error {
 		return fmt.Errorf("main queue bind error: %w", err)
 	}
 
-	// 5. Declare final dead letter queue (no TTL - manual intervention required)
 	_, err = channel.QueueDeclare(finalDLQ, true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("final DLQ declare error: %w", err)
 	}
 
-	logger.Info().Msgf("✅ Pure DLX Ready → Queue: %s | Retry: %s | TTL: 30s", queueName, retryExchange)
+	logger.Info().Msgf("Pure DLX Ready → Queue: %s | Retry: %s | TTL: 30s", queueName, retryExchange)
 
 	err = channel.Qos(prefetchCount, 0, false)
 	if err != nil {
 		return fmt.Errorf("QoS error: %w", err)
 	}
 
-	// 7. Start consuming with manual ack
 	msgs, err := channel.Consume(queueName, "", false, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("failed to start consumer: %w", err)
@@ -160,7 +149,6 @@ func StartRabbitMQConsumer() error {
 
 			contextLogger.Info().Msgf("📦 Received task: %s", task.ID)
 
-			// Pure DLX Pattern: Check x-death headers to determine retry count
 			retryCount := getRetryCount(msg.Headers)
 
 			err := circuitBreaker.Execute(func() error {
@@ -168,12 +156,12 @@ func StartRabbitMQConsumer() error {
 			})
 
 			if err != nil {
-				contextLogger.Info().Msgf("⛔ Task %s failed [retry %d/%d]", task.ID, retryCount, MAX_RETRIES)
+				contextLogger.Info().Msgf("Task %s failed [retry %d/%d]", task.ID, retryCount, MAX_RETRIES)
 				utils.TaskProcessedTotal.With(prometheus.Labels{"type": "resize-image", "status": "failed"}).Inc()
 
 				if retryCount >= MAX_RETRIES {
 					// Final failure - send to DLQ manually
-					contextLogger.Info().Msgf("💀 Task %s exceeded retry limit, sending to final DLQ", task.ID)
+					contextLogger.Info().Msgf("Task %s exceeded retry limit, sending to final DLQ", task.ID)
 					utils.TaskDroppedTotal.With(prometheus.Labels{"type": "resize-image"}).Inc()
 
 					err := channel.Publish("", finalDLQ, false, false, amqp.Publishing{
@@ -181,13 +169,13 @@ func StartRabbitMQConsumer() error {
 						Body:        msg.Body,
 					})
 					if err != nil {
-						contextLogger.Error().Msgf("❌ DLQ publish failed: %v", err)
+						contextLogger.Error().Msgf("DLQ publish failed: %v", err)
 					}
-					_ = msg.Ack(false) // Ack to prevent redelivery
+					_ = msg.Ack(false)
 				} else {
-					// Let RabbitMQ DLX handle retry (automatic routing to retry queue)
+
 					utils.TaskRetryAttempts.With(prometheus.Labels{"type": "resize-image"}).Inc()
-					_ = msg.Nack(false, false) // Nack without requeue → triggers DLX → retry queue
+					_ = msg.Nack(false, false)
 				}
 				continue
 			}
@@ -197,7 +185,7 @@ func StartRabbitMQConsumer() error {
 			utils.TaskProcessedDuration.With(prometheus.Labels{"type": "resize"}).Observe(duration.Seconds())
 
 			utils.TaskProcessedTotal.With(prometheus.Labels{"type": "resize", "status": "success"}).Inc()
-			_ = msg.Ack(false) // ✅ success
+			_ = msg.Ack(false)
 		}
 	}()
 

@@ -8,7 +8,6 @@ const connection = dbConfig[config.env]
 
 attachPaginate()
 
-// Database connection with resilience
 const createDatabaseConnection = (): Knex => {
   const dbConnection = knex({
     ...connection,
@@ -25,14 +24,12 @@ const createDatabaseConnection = (): Knex => {
     acquireConnectionTimeout: 60000,
   })
 
-  // Add connection event listeners for monitoring
   dbConnection.on("query-error", (error, obj) => {
     logger.error("❌ Database query error", {
       error: error.message,
       sql: obj.sql,
     })
 
-    // Let connection pool handle reconnection automatically
     if (isConnectionError(error)) {
       logger.warn("⚠️ Database connection error detected")
     }
@@ -76,7 +73,7 @@ class DatabaseCircuitBreaker {
   private failures = 0
   private lastFailureTime = 0
   private readonly maxFailures = 5
-  private readonly timeout = 60000 // 1 minute
+  private readonly timeout = 60000
   private state: "CLOSED" | "OPEN" | "HALF_OPEN" = "CLOSED"
 
   async execute<T>(operation: () => Promise<T>): Promise<T> {

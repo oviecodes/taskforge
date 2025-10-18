@@ -15,13 +15,9 @@ dotenv.config()
 const log = withLogContext({ service: "outbox-publisher-main" })
 const HEALTH_PORT = Number(process.env.HEALTH_PORT || 8200)
 
-// Enhanced startup with health checks
 const initializeServices = async () => {
   try {
-    // Connect to RabbitMQ (has built-in retry logic)
     const channel = await connectToRabbitMQ()
-
-    // await runServicePublishers(channel)
 
     // Start the publishing loop
     setInterval(async () => {
@@ -32,18 +28,18 @@ const initializeServices = async () => {
           {
             error: error instanceof Error ? error.message : "Unknown error",
           },
-          "❌ Error in publish loop"
+          "Error in publish loop"
         )
       }
     }, 60 * 1000)
 
-    log.info("✅ All services initialized successfully")
+    log.info("All services initialized successfully")
   } catch (error) {
     log.error(
       {
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      "❌ Failed to initialize services"
+      "Failed to initialize services"
     )
     process.exit(1)
   }

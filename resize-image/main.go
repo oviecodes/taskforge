@@ -32,7 +32,6 @@ func main() {
 		}
 	}()
 
-	// Give metrics server time to start
 	time.Sleep(2 * time.Second)
 	logger.Info().Msg("✅ Metrics server should be running")
 

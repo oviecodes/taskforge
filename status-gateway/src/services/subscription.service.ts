@@ -36,7 +36,7 @@ export class SubscriptionService {
   }
 
   /**
-   * Optional: Get all tasks a user is subscribed to
+   * Get all tasks a user is subscribed to
    */
   async getUserTasks(userId: string): Promise<string[]> {
     const keys = await redis.keys(`${this.prefix}:*:subscribers`)

@@ -49,7 +49,7 @@ def handle_message(ch, method, properties, body):
             s3_key = f"pdf/{task_id}.{format}"
 
             if file_exists(os.getenv("S3_BUCKET_NAME"), s3_key):
-                logger.info(f"♻️ Skipping task {task_id} — file already in S3")
+                logger.info(f"Skipping task {task_id} — file already in S3")
                 signed_url = generate_signed_url(s3_key)
                 result = {
                     "success": True,
@@ -117,22 +117,22 @@ def start_worker():
 
     while tries < RABBITMQ_CONNECTION_RETRY:
         try:
-            logger.info(f"🔁 [Worker] Connecting to RabbitMQ... attempt {tries + 1}")
+            logger.info(f"[Worker] Connecting to RabbitMQ... attempt {tries + 1}")
             channel = connect_and_consume()
-            break  # ✅ Connected successfully, exit loop
+            break 
         except Exception as e:
             tries += 1
-            logger.warning(f"❌ [Worker] RabbitMQ connection failed: {e}", e)
+            logger.warning(f"[Worker] RabbitMQ connection failed: {e}", e)
 
             if tries >= RABBITMQ_CONNECTION_RETRY:
-                logger.critical("💥 [Worker] Max retry attempts reached. Exiting.")
+                logger.critical("[Worker] Max retry attempts reached. Exiting.")
                 raise Exception("Cannot connect to RabbitMQ") from e
 
-            logger.info(f"⏳ [Worker] Retrying in {RETRY_DELAY_SECONDS} seconds...")
+            logger.info(f"[Worker] Retrying in {RETRY_DELAY_SECONDS} seconds...")
             time.sleep(RETRY_DELAY_SECONDS)
 
     # Start consuming
-    logger.info("🐇 Waiting for messages (with retry/DLQ support)...")
+    logger.info("Waiting for messages (with retry/DLQ support)...")
 
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=handle_message)

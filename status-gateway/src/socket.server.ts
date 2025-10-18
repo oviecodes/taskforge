@@ -14,7 +14,7 @@ const connectionStore = new ConnectionStore()
 
 export const sockets = new Map<string, WebSocket>() // socketId → socket
 
-const HEARTBEAT_INTERVAL = 30000 // 30s
+const HEARTBEAT_INTERVAL = 30000
 
 type User = {
   email: string
@@ -60,7 +60,7 @@ export const initWebSocket = (serverPort: number) => {
           if (msg.type === "subscribe" && msg.taskId) {
             await subscriptionService.addSubscriber(msg.taskId, userId)
 
-            // 🔁 Immediately respond with current status (if exists)
+            // Immediately respond with current status (if exists)
             const cached = await statusCache.getStatus(msg.taskId)
             if (cached) {
               ws.send(JSON.stringify({ taskId: msg.taskId, ...cached }))
@@ -80,7 +80,7 @@ export const initWebSocket = (serverPort: number) => {
         sockets.delete(socketId)
         await connectionStore.removeConnection(socketId)
 
-        // Optional: clean all subscriptions
+        // clean all subscriptions
         const taskIds = await subscriptionService.getUserTasks(userId)
         for (const taskId of taskIds) {
           await subscriptionService.removeSubscriber(taskId, userId)
@@ -98,7 +98,7 @@ export const initWebSocket = (serverPort: number) => {
       const alive = (ws as any).isAlive
 
       if (!alive) {
-        console.log(`💀 Socket ${socketId} unresponsive. Terminating...`)
+        console.log(`Socket ${socketId} unresponsive. Terminating...`)
         ws.terminate()
         sockets.delete(socketId)
         await connectionStore.removeConnection(socketId)
@@ -117,7 +117,6 @@ export const broadcastToTask = async (
 ) => {
   // console.log(`setting ${taskId} cache here`)
   // await statusCache.setStatus(taskId, data)
-  // 🧠 Clear from cache if final state
   if (["completed", "failed"].includes(data.status)) {
     await statusCache.clearStatus(taskId)
   } else {

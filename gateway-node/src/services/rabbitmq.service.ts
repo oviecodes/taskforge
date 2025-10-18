@@ -16,7 +16,7 @@ export const connectToRabbitMQ = async () => {
 
   while (attempts < MAX_RETRIES) {
     try {
-      console.log(`🔌 Connecting to RabbitMQ (Attempt ${attempts + 1})...`)
+      console.log(`Connecting to RabbitMQ (Attempt ${attempts + 1})...`)
       connection = await amqp.connect(config.rabbitmqUrl)
       channel = await connection.createChannel()
       await channel.assertExchange(EXCHANGE_NAME, "direct", { durable: true })
@@ -26,10 +26,10 @@ export const connectToRabbitMQ = async () => {
       return
     } catch (err: any) {
       attempts++
-      console.error(`❌ RabbitMQ connection failed: ${err.message}`)
+      console.error(`RabbitMQ connection failed: ${err.message}`)
 
       if (attempts >= MAX_RETRIES) {
-        console.error("🚨 Max retries reached. Exiting...")
+        console.error("Max retries reached. Exiting...")
         process.exit(1)
       }
 
@@ -49,7 +49,7 @@ export const publishToQueue = async (routingKey: string, task: TaskMessage) => {
   )
 
   if (!success) {
-    console.warn(`⚠️ Failed to publish task with ID: ${task.id}`)
+    console.warn(`Failed to publish task with ID: ${task.id}`)
   }
 }
 
@@ -70,7 +70,7 @@ export const setupDeadLetterQueue = async () => {
   await channel.assertQueue("queue.dlq", { durable: true })
   await channel.bindQueue("queue.dlq", DLX_NAME, "dead")
 
-  console.log("☠️ Dead Letter Queue setup complete.")
+  console.log("Dead Letter Queue setup complete.")
 }
 
 export const setupRetryQueue = async (
@@ -90,7 +90,7 @@ export const setupRetryQueue = async (
     },
   })
 
-  console.log(`⏳ Retry queue "${queueName}" created.`)
+  console.log(`Retry queue "${queueName}" created.`)
   return queueName
 }
 
@@ -109,5 +109,5 @@ export const sendToRetryQueue = async (
     persistent: true,
   })
 
-  console.log(`🔁 Task ${task.id} sent to retry queue (${delayMs}ms)`)
+  console.log(`Task ${task.id} sent to retry queue (${delayMs}ms)`)
 }

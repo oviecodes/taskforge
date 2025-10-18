@@ -38,7 +38,6 @@ export const authenticate = async (
     req.user = { id: decoded.id, email: decoded.email }
     next()
   } catch (err) {
-    console.log(err)
     return res.status(401).json({ message: "Invalid or expired token" })
   }
 }
