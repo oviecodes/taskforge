@@ -1,5 +1,3 @@
-// src/lib/logger.ts
-
 import pino from "pino"
 
 export const logger = pino({
@@ -16,6 +14,5 @@ export const logger = pino({
     },
   },
   timestamp: pino.stdTimeFunctions.isoTime,
-  // Force JSON output even in development for container logging
   transport: undefined,
 })

@@ -53,7 +53,6 @@ def start_consumer():
         try:
             logger.info(f"📡 Connecting to RabbitMQ (Attempt {attempt}/{MAX_RABBITMQ_RETRIES})...")
             
-            # Use simpler connection parameters to avoid pika issues
             url = RABBITMQ_URL
             if "?" in url:
                 url += "&heartbeat=600&blocked_connection_timeout=300"
@@ -109,7 +108,7 @@ def start_consumer():
     # Final dead-letter queue declaration
     channel.queue_declare(queue=final_dlq, durable=True)
 
-    logger.info(f"✅ TTL-Based DLX Ready → Queue: {QUEUE_NAME} | Retry: {retry_exchange} | TTL: {RETRY_DELAY_MS / 1000}s")
+    logger.info(f"TTL-Based DLX Ready → Queue: {QUEUE_NAME} | Retry: {retry_exchange} | TTL: {RETRY_DELAY_MS / 1000}s")
 
     def callback(ch, method, properties, body):
         start_time = time.time()
@@ -120,25 +119,25 @@ def start_consumer():
             # TTL-Based DLX Pattern: Check x-death headers for retry count
             retry_count = get_retry_count(properties)
             
-            logger.info(f"📦 Received task: {task_id} (retry {retry_count}/{MAX_RETRIES})")
+            logger.info(f"Received task: {task_id} (retry {retry_count}/{MAX_RETRIES})")
 
             # Use circuit breaker only for the actual task processing
             circuitbreaker.execute(lambda: task_worker.handle_task(task))
 
             # Success - acknowledge the message
             ch.basic_ack(delivery_tag=method.delivery_tag)
-            logger.info(f"✅ Task {task_id} completed")
+            logger.info(f"Task {task_id} completed")
             task_processed_total.labels(type="compress-video", status="success").inc()
             
         except Exception as e:
             task_id = task.get("id", "unknown")
-            logger.error(f"⛔ Task {task_id} failed [retry {retry_count}/{MAX_RETRIES}] → {e}")
+            logger.error(f"Task {task_id} failed [retry {retry_count}/{MAX_RETRIES}] → {e}")
             
             task_processed_total.labels(type="compress-video", status="failed").inc()
 
             if retry_count >= MAX_RETRIES:
                 # Final failure - send to DLQ manually
-                logger.warning(f"💀 Task {task_id} exceeded retry limit, sending to final DLQ")
+                logger.warning(f"Task {task_id} exceeded retry limit, sending to final DLQ")
                 task_dropped_total.labels(type="compress-video").inc()
                 
                 try:
@@ -149,30 +148,30 @@ def start_consumer():
                         properties=pika.BasicProperties(content_type="application/json")
                     )
                 except Exception as pub_err:
-                    logger.error(f"❌ DLQ publish failed: {pub_err}")
+                    logger.error(f"DLQ publish failed: {pub_err}")
                     
                 ch.basic_ack(delivery_tag=method.delivery_tag)
             else:
                 
                 task_retry_attempts_total.labels("compress-video").inc()
-                ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False)  # Triggers DLX → retry queue
+                ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False) 
 
         # Record processing duration
         duration = time.time() - start_time
         task_processing_duration_seconds.labels(type="compress-video").observe(duration)
 
-    # Start consuming (QoS already set above)
+
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback)
 
     try:
-        logger.info("🚀 Starting message consumption...")
+        logger.info("Starting message consumption...")
         channel.start_consuming()
     except KeyboardInterrupt:
-        logger.warning("🛑 Consumer stopped manually")
+        logger.warning("Consumer stopped manually")
         channel.stop_consuming()
         connection.close()
     except Exception as e:
-        logger.error(f"❌ Consumer error: {e}")
+        logger.error(f"Consumer error: {e}")
         try:
             channel.stop_consuming()
             connection.close()
@@ -190,8 +189,6 @@ def isRabbitMQHealthy():
         if connection.is_closed or channel.is_closed:
             return False
             
-        # Check if our service queue exists (passive=True won't create it)
-        # channel.queue_declare(queue=QUEUE_NAME, passive=True)
         return True
     except Exception as e:
         logger.error(f"RabbitMQ health check failed: {e}")

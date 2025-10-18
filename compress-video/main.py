@@ -10,7 +10,7 @@ def run_metrics_server():
     port = int(os.getenv('PORT', '8100'))
     print(f'Starting metrics server on port {port}')
     try:
-        app.run(host='0.0.0.0', port=port, debug=False)  # debug=False for metrics server
+        app.run(host='0.0.0.0', port=port, debug=False)
     except Exception as e:
         print(f'Metrics server failed to start: {e}')
 

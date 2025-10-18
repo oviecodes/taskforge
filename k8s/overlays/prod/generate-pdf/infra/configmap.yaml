@@ -16,5 +16,5 @@ data:
   REDIS_TASK_TTL: "300"
   PDF_OUTPUT_DIR: /tmp/pdf-output
   S3_SIGNED_URL_EXP: "600"
-  CHROMIUM_RENDERER_URL: "http://chromium-renderer.chromium-renderer.svc.cluster.local:3000"
+  CHROMIUM_RENDERER_URL: "http://chromium-renderer-prod.chromium-renderer.svc.cluster.local:3000"
   NODE_ENV: "production"

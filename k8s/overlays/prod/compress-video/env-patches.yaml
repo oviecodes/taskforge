@@ -55,8 +55,8 @@ spec:
             value: "8100"
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "900m"
           limits:
-            memory: "2Gi"
+            memory: "1Gi"
             cpu: "1"

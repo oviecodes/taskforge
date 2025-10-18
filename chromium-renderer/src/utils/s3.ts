@@ -41,11 +41,10 @@ export async function uploadBufferToS3(
 
     await s3.send(new PutObjectCommand(uploadParams))
 
-    // Create a signed URL that expires in 10 minutes
     const signedUrl = await getSignedUrl(
       s3,
       new GetObjectCommand({ Bucket: bucket, Key: filename }),
-      { expiresIn: 600 } // 600 seconds = 10 mins
+      { expiresIn: 600 }
     )
 
     return signedUrl

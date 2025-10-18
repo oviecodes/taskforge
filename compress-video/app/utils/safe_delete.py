@@ -1,5 +1,3 @@
-# app/utils/safe_delete.py
-
 import os
 import logging
 
