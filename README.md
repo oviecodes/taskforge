@@ -82,7 +82,7 @@ Access the monitoring stack:
 - **Prometheus**: http://localhost:9090
 - **AlertManager**: http://localhost:9093
 
-## 🧪 Testing
+<!-- ## 🧪 Testing -->
 
 <!-- ```bash
 # Load testing
