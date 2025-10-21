@@ -20,7 +20,7 @@ TaskForge demonstrates key distributed systems concepts:
 
 - **Publisher** - [Exploring the outbox pattern for Taskforge](https://medium.com/@alecgee73/exploring-the-outbox-pattern-for-taskforge-1dca53196d9e)
 
-- **Scaling WebSockets** - [Scaling Websockets in Taskforge]()
+- **Scaling WebSockets** - [Scaling Websockets in Taskforge](https://medium.com/@alecgee73/scaling-websockets-in-taskforge-7e852d48b186)
 
 ### Services
 
