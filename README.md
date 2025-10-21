@@ -16,9 +16,9 @@ TaskForge demonstrates key distributed systems concepts:
 
 ### Articles on Architectural patterns & designs
 
-Overview [Taskforge Overview](https://medium.com/@alecgee73/taskforge-a-distributed-task-processing-system-d67071710651)
+- **Overview** - [Taskforge Overview](https://medium.com/@alecgee73/taskforge-a-distributed-task-processing-system-d67071710651)
 
-Publisher [Outbox Pattern](https://medium.com/@alecgee73/exploring-the-outbox-pattern-for-taskforge-1dca53196d9e)
+- **Publisher** - [Outbox Pattern](https://medium.com/@alecgee73/exploring-the-outbox-pattern-for-taskforge-1dca53196d9e)
 
 ### Services
 
