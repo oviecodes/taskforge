@@ -18,7 +18,9 @@ TaskForge demonstrates key distributed systems concepts:
 
 - **Overview** - [Taskforge Overview](https://medium.com/@alecgee73/taskforge-a-distributed-task-processing-system-d67071710651)
 
-- **Publisher** - [Outbox Pattern](https://medium.com/@alecgee73/exploring-the-outbox-pattern-for-taskforge-1dca53196d9e)
+- **Publisher** - [Exploring the outbox pattern for Taskforge](https://medium.com/@alecgee73/exploring-the-outbox-pattern-for-taskforge-1dca53196d9e)
+
+- **Scaling WebSockets** - [Scaling Websockets in Taskforge]()
 
 ### Services
 
