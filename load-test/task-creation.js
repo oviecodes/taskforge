@@ -20,7 +20,7 @@ export const options = {
     { duration: "2m", target: 0 },
   ],
 
-  setupTimeout: "5m",
+  setupTimeout: "6m",
 }
 
 // Custom metrics

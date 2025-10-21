@@ -52,7 +52,7 @@ spec:
             - name: S3_SIGNED_URL_EXP
               valueFrom: { configMapKeyRef: { name: resize-image-config, key: S3_SIGNED_URL_EXP } }
             - name: PREFETCH_COUNT
-              value: "12"
+              value: "8"
         resources:
           requests:
             memory: "512Mi"
