@@ -14,10 +14,11 @@ TaskForge demonstrates key distributed systems concepts:
 - **Circuit Breaker**: Resilient external service calls
 - **Observability**: Comprehensive monitoring and logging
 
-### Architectural patterns & designs
+### Articles on Architectural patterns & designs
 
-[Taskforge Overview](https://medium.com/@alecgee73/taskforge-a-distributed-task-processing-system-d67071710651)
-[Outbox Pattern](https://medium.com/@alecgee73/exploring-the-outbox-pattern-for-taskforge-1dca53196d9e)
+Overview [Taskforge Overview](https://medium.com/@alecgee73/taskforge-a-distributed-task-processing-system-d67071710651)
+
+Publisher [Outbox Pattern](https://medium.com/@alecgee73/exploring-the-outbox-pattern-for-taskforge-1dca53196d9e)
 
 ### Services
 
