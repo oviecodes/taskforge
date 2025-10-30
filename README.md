@@ -22,6 +22,8 @@ TaskForge demonstrates key distributed systems concepts:
 
 - **Scaling WebSockets** - [Scaling Websockets in Taskforge](https://medium.com/@alecgee73/scaling-websockets-in-taskforge-7e852d48b186)
 
+- **RabbitMQ Dead-Letter-Queue Architecture** - In Progress!!!
+
 ### Services
 
 | Service               | Language   | Purpose                              |
