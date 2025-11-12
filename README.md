@@ -2,7 +2,7 @@
 
 A microservices-based distributed system showcasing modern architectural patterns for task processing, built with Node.js (TypeScript), featuring Go and Python workers, and containerized with Docker/Kubernetes.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 ![High Level Architecture](assets/High-level-archictecture.png)
 
@@ -44,7 +44,7 @@ TaskForge demonstrates key distributed systems concepts:
 - **Monitoring**: Prometheus + Grafana + Loki + AlertManager stack
 - **Container Orchestration**: Kubernetes with proper resource management
 
-## 🚀 Performance Highlights
+## Performance Highlights
 
 - **Hybrid ORM Strategy**: Prisma for migrations, Knex for high-performance queries
 - **Connection Pooling**: Optimized database connections
@@ -76,7 +76,7 @@ kubectl apply -k k8s/overlays/prod
 kubectl get pods -n taskforge-prod
 ``` -->
 
-## 📊 Monitoring & Observability
+## Monitoring & Observability
 
 Access the monitoring stack:
 
@@ -84,7 +84,7 @@ Access the monitoring stack:
 - **Prometheus**: http://localhost:9090
 - **AlertManager**: http://localhost:9093
 
-<!-- ## 🧪 Testing -->
+<!-- ## Testing -->
 
 <!-- ```bash
 # Load testing
@@ -96,7 +96,7 @@ node load-test.js
 npm run test:integration
 ``` -->
 
-## 🏛️ Design Decisions
+## Design Decisions
 
 ### Database Strategy
 
@@ -116,14 +116,14 @@ npm run test:integration
 - **Resource Limits**: Prevents resource starvation
 - **Secrets Management**: Proper secret handling vs hardcoded values
 
-## 📈 Scalability Features
+## Scalability Features
 
 - **Horizontal Scaling**: Services can scale independently
 - **Database Connection Pooling**: Efficient resource utilization
 - **Async Processing**: Non-blocking architecture
 - **Load Balancing**: Kubernetes service discovery
 
-## 🔒 Security
+## Security
 
 - **Secrets Management**: Kubernetes secrets vs environment variables
 - **JWT Authentication**: Stateless authentication strategy
