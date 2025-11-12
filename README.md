@@ -51,7 +51,7 @@ TaskForge demonstrates key distributed systems concepts:
 - **Async Processing**: Non-blocking task handling
 - **Resource Limits**: Production-ready resource management
 
-## 🔧 Quick Start
+## Quick Start
 
 ### Local Development
 
